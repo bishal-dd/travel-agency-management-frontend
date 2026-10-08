@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0f2233;
+  --color-ink-soft: #46586a;
+  --color-lagoon: #0b6e6e;
+  --color-lagoon-deep: #084f52;
+  --color-lagoon-tint: #dcefec;
+  --color-marigold: #f4a62a;
+  --color-marigold-tint: #fdf0d5;
+  --color-mist: #eef4f3;
+  --color-paper: #fbfcfb;
+  --color-line: #dbe5e3;
+
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+
+  --shadow-lift:
+    0 1px 2px rgb(15 34 51 / 0.06), 0 12px 32px -12px rgb(15 34 51 / 0.18);
+  --shadow-deep:
+    0 2px 4px rgb(15 34 51 / 0.06), 0 40px 80px -32px rgb(8 79 82 / 0.45);
+
+  --animate-rise: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-draw: draw 2.2s 0.5s ease-out both;
+  --animate-bob: bob 7s ease-in-out infinite;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-lagoon);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.font-display {
+  font-variation-settings:
+    "SOFT" 60,
+    "WONK" 0;
+  letter-spacing: -0.02em;
+}
+
+/* Faint contour lines, like a topographic map */
+.contours {
+  background-image:
+    radial-gradient(
+      ellipse 80% 60% at 85% 0%,
+      rgb(11 110 110 / 0.14),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 0% 30%,
+      rgb(244 166 42 / 0.12),
+      transparent 70%
+    ),
+    repeating-radial-gradient(
+      circle at 90% -10%,
+      transparent 0 38px,
+      rgb(11 110 110 / 0.06) 38px 39px
+    );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
