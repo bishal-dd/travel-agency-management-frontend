@@ -1,4 +1,10 @@
-import { CalendarCheck, Check, CreditCard, FileText, MapPin } from "lucide-react";
+import {
+  CalendarCheck,
+  Check,
+  CreditCard,
+  FileText,
+  MapPin,
+} from "lucide-react";
 import { Button, Container } from "./ui";
 
 const stops = [
@@ -13,8 +19,12 @@ function ItineraryCard() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold text-lagoon">Tour package</p>
-          <p className="font-display mt-1 text-2xl font-medium">Portugal coast, 7 days</p>
-          <p className="mt-1 text-sm text-ink-soft">Okafor family, 4 travellers</p>
+          <p className="font-display mt-1 text-2xl font-medium">
+            Portugal coast, 7 days
+          </p>
+          <p className="mt-1 text-sm text-ink-soft">
+            Okafor family, 4 travellers
+          </p>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-lagoon-tint px-2.5 py-1 text-xs font-semibold text-lagoon-deep">
           <Check size={13} strokeWidth={3} /> Confirmed
@@ -44,7 +54,12 @@ function ItineraryCard() {
           ].map(([x, y], i) => (
             <g key={i}>
               <circle cx={x} cy={y} r="9" className="fill-white" />
-              <circle cx={x} cy={y} r="4.5" className={i === 2 ? "fill-marigold" : "fill-lagoon"} />
+              <circle
+                cx={x}
+                cy={y}
+                r="4.5"
+                className={i === 2 ? "fill-marigold" : "fill-lagoon"}
+              />
             </g>
           ))}
         </svg>
@@ -53,7 +68,9 @@ function ItineraryCard() {
       <ol className="mt-5 space-y-3.5">
         {stops.map((s) => (
           <li key={s.day} className="flex items-center gap-3">
-            <span className="w-12 shrink-0 text-xs font-semibold text-ink-soft">{s.day}</span>
+            <span className="w-12 shrink-0 text-xs font-semibold text-ink-soft">
+              {s.day}
+            </span>
             <MapPin size={15} className="shrink-0 text-lagoon" />
             <span className="min-w-0 truncate text-sm">
               <span className="font-semibold">{s.place}</span>
@@ -75,7 +92,10 @@ function ItineraryCard() {
 
 export function Hero() {
   return (
-    <section id="top" className="contours relative overflow-hidden pt-28 pb-16 sm:pt-40 sm:pb-28">
+    <section
+      id="top"
+      className="contours relative overflow-hidden pt-28 pb-16 sm:pt-40 sm:pb-28"
+    >
       <Container className="grid items-center gap-14 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
         <div>
           <h1 className="font-display animate-rise text-[2.6rem] leading-[1.02] font-medium text-ink sm:text-6xl lg:text-[4.25rem]">
@@ -85,15 +105,15 @@ export function Hero() {
             className="animate-rise mt-6 max-w-xl text-lg leading-relaxed text-ink-soft sm:text-xl"
             style={{ animationDelay: "120ms" }}
           >
-            Tripdesk keeps customers, bookings, tour packages, itineraries, payments and
-            documents in one place, so your team spends the day selling trips instead of
-            chasing spreadsheets.
+            Tripdesk keeps customers, bookings, tour packages, itineraries,
+            payments and documents in one place, so your team spends the day
+            selling trips instead of chasing spreadsheets.
           </p>
           <div
             className="animate-rise mt-8 flex flex-col gap-3 sm:flex-row"
             style={{ animationDelay: "240ms" }}
           >
-            <Button href="#get-started" size="lg">
+            <Button href="/sign-up" size="lg">
               Start free trial
             </Button>
             <Button href="#product" size="lg" variant="secondary">
@@ -104,7 +124,11 @@ export function Hero() {
             className="animate-rise mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft"
             style={{ animationDelay: "340ms" }}
           >
-            {["14-day free trial", "No credit card needed", "Set up in an afternoon"].map((t) => (
+            {[
+              "14-day free trial",
+              "No credit card needed",
+              "Set up in an afternoon",
+            ].map((t) => (
               <li key={t} className="flex items-center gap-1.5">
                 <Check size={15} strokeWidth={3} className="text-lagoon" /> {t}
               </li>

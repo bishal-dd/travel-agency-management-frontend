@@ -12,11 +12,11 @@ export function CallToAction() {
               Your next booking could be your first in Tripdesk.
             </h2>
             <p className="mt-5 max-w-lg text-lg leading-relaxed text-white/70">
-              Try every feature free for 14 days. Bring your own customers and bookings,
-              or explore with sample data.
+              Try every feature free for 14 days. Bring your own customers and
+              bookings, or explore with sample data.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button href="#" variant="onDark" size="lg">
+              <Button href="/sign-up" variant="onDark" size="lg">
                 Start free trial
               </Button>
               <Button
@@ -31,16 +31,27 @@ export function CallToAction() {
 
           <div className="relative border-t-2 border-dashed border-white/20 bg-lagoon-deep p-8 sm:p-10 lg:border-t-0 lg:border-l-2">
             {/* Notches */}
-            <span aria-hidden="true" className="absolute -top-4 -left-4 hidden size-8 rounded-full bg-paper lg:block" />
-            <span aria-hidden="true" className="absolute -bottom-4 -left-4 hidden size-8 rounded-full bg-paper lg:block" />
+            <span
+              aria-hidden="true"
+              className="absolute -top-4 -left-4 hidden size-8 rounded-full bg-paper lg:block"
+            />
+            <span
+              aria-hidden="true"
+              className="absolute -bottom-4 -left-4 hidden size-8 rounded-full bg-paper lg:block"
+            />
 
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs text-white/60">From</p>
-                <p className="font-display text-3xl font-medium">Spreadsheets</p>
+                <p className="font-display text-3xl font-medium">
+                  Spreadsheets
+                </p>
               </div>
             </div>
-            <div className="my-4 flex items-center gap-3 text-marigold" aria-hidden="true">
+            <div
+              className="my-4 flex items-center gap-3 text-marigold"
+              aria-hidden="true"
+            >
               <span className="h-px flex-1 border-t border-dashed border-white/30" />
               <Plane size={20} className="rotate-45" />
               <span className="h-px flex-1 border-t border-dashed border-white/30" />

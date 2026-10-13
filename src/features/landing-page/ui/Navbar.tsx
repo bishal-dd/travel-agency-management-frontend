@@ -50,12 +50,13 @@ export function Navbar() {
 
         <div className="hidden items-center gap-2 lg:flex">
           <a
-            href="#"
+            href="/sign-in"
             className="px-3 text-sm font-semibold text-ink transition-colors hover:text-lagoon"
           >
             Sign in
           </a>
-          <Button href="#get-started">Start free trial</Button>
+
+          <Button href="/sign-up">Start free trial</Button>
         </div>
 
         <button
@@ -92,7 +93,11 @@ export function Navbar() {
               <Button href="#" variant="secondary" size="lg">
                 Sign in
               </Button>
-              <Button href="#get-started" size="lg" onClick={() => setOpen(false)}>
+              <Button
+                href="#get-started"
+                size="lg"
+                onClick={() => setOpen(false)}
+              >
                 Start free trial
               </Button>
             </div>
