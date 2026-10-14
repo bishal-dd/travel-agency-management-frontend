@@ -5,7 +5,8 @@ import {
   FileText,
   MapPin,
 } from "lucide-react";
-import { Button, Container } from "./ui";
+import { Container } from "./ui";
+import { WaitlistForm } from "./WaitlistForm";
 
 const stops = [
   { day: "Day 1", place: "Lisbon", note: "Arrival, Alfama walking tour" },
@@ -109,25 +110,22 @@ export function Hero() {
             payments and documents in one place, so your team spends the day
             selling trips instead of chasing spreadsheets.
           </p>
+
           <div
-            className="animate-rise mt-8 flex flex-col gap-3 sm:flex-row"
+            className="animate-rise mt-8"
             style={{ animationDelay: "240ms" }}
           >
-            <Button href="/sign-up" size="lg">
-              Start free trial
-            </Button>
-            <Button href="#product" size="lg" variant="secondary">
-              See the product
-            </Button>
+            <WaitlistForm />
           </div>
+
           <ul
             className="animate-rise mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft"
             style={{ animationDelay: "340ms" }}
           >
             {[
-              "14-day free trial",
-              "No credit card needed",
-              "Set up in an afternoon",
+              "Early access updates",
+              "Built for travel agencies",
+              "All your operations in one place",
             ].map((t) => (
               <li key={t} className="flex items-center gap-1.5">
                 <Check size={15} strokeWidth={3} className="text-lagoon" /> {t}
