@@ -9,7 +9,7 @@ const links = [
   { href: "#product", label: "Product" },
   { href: "#benefits", label: "Why Tripdesk" },
   { href: "#how-it-works", label: "How it works" },
-  { href: "#customers", label: "Customers" },
+  // { href: "#customers", label: "Customers" },
 ];
 
 export function Navbar() {
@@ -33,10 +33,12 @@ export function Navbar() {
           : "bg-transparent"
       }`}
     >
-      <Container className="flex h-16 items-center justify-between">
+      <Container className="relative flex h-16 items-center justify-between">
         <Logo />
-
-        <nav aria-label="Main" className="hidden items-center gap-7 lg:flex">
+        <nav
+          aria-label="Main"
+          className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex"
+        >
           {links.map((l) => (
             <a
               key={l.href}
@@ -47,8 +49,7 @@ export function Navbar() {
             </a>
           ))}
         </nav>
-
-        <div className="hidden items-center gap-2 lg:flex">
+        {/* <div className="hidden items-center gap-2 lg:flex">
           <a
             href="/sign-in"
             className="px-3 text-sm font-semibold text-ink transition-colors hover:text-lagoon"
@@ -57,8 +58,10 @@ export function Navbar() {
           </a>
 
           <Button href="/sign-up">Start free trial</Button>
+        </div> */}
+        <div className="hidden items-center gap-2 lg:flex">
+          <Button href="/waitlist">Join the waitlist</Button>
         </div>
-
         <button
           type="button"
           className="-mr-2 grid size-10 place-items-center rounded-full text-ink lg:hidden"
@@ -89,7 +92,7 @@ export function Navbar() {
                 {l.label}
               </a>
             ))}
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            {/* <div className="mt-5 grid grid-cols-2 gap-3">
               <Button href="#" variant="secondary" size="lg">
                 Sign in
               </Button>
@@ -99,6 +102,11 @@ export function Navbar() {
                 onClick={() => setOpen(false)}
               >
                 Start free trial
+              </Button>
+            </div> */}
+            <div className="mt-5">
+              <Button href="/waitlist" size="lg" onClick={() => setOpen(false)}>
+                Join the waitlist
               </Button>
             </div>
           </Container>
