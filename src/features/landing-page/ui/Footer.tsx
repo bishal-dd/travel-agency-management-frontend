@@ -5,8 +5,8 @@ const columns = [
   {
     title: "Legal",
     links: [
-      { label: "Privacy Policy", href: "/privacy-policy" },
-      { label: "Terms & Conditions", href: "/terms-and-conditions" },
+      { label: "Privacy", href: "/privacy-policy" },
+      { label: "Terms", href: "/terms-and-conditions" },
     ],
   },
 ];
@@ -23,9 +23,9 @@ export function Footer() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 sm:justify-items-end">
+        <div className="flex gap-12 lg:justify-end">
           {columns.map((c) => (
-            <nav key={c.title} aria-label={c.title}>
+            <nav key={c.title} aria-label={c.title} className="lg:text-right">
               <h3 className="text-sm font-bold">{c.title}</h3>
               <ul className="mt-4 space-y-2.5">
                 {c.links.map((link) => (
