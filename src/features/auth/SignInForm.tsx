@@ -170,7 +170,7 @@ export function SignInForm() {
       </form>
 
       <p className="mt-8 text-center text-sm text-ink-soft">
-        New to Tripdesk?{" "}
+        New to Help Make Travel?{" "}
         <Link
           href={withCallbackUrl(ROUTES.signUp, callbackURL)}
           className="font-semibold text-lagoon hover:text-lagoon-deep"

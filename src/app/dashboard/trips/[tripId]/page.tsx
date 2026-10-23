@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { TripDetailPage } from "@/src/features/trips/ui/TripDetailPage";
 
-export const metadata: Metadata = { title: "Trip | Tripdesk" };
+export const metadata: Metadata = { title: "Trip | Help Make Travel" };
 
 /** `params` is request data, so it's read inside Suspense (Cache Components). */
 async function TripDetailRoute({

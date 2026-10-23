@@ -24,25 +24,40 @@ const others = [
 ];
 
 const stats = [
-  { value: "1,200+", label: "agencies on Tripdesk" },
+  { value: "1,200+", label: "agencies on Help Make Travel" },
   { value: "3.4M", label: "trips managed" },
   { value: "9 hrs", label: "saved per agent each week" },
 ];
 
-function Person({ name, role, tone = "light" }: { name: string; role: string; tone?: "light" | "dark" }) {
+function Person({
+  name,
+  role,
+  tone = "light",
+}: {
+  name: string;
+  role: string;
+  tone?: "light" | "dark";
+}) {
   return (
     <figcaption className="flex items-center gap-3">
       <span
         className={`grid size-10 place-items-center rounded-full text-sm font-bold ${
-          tone === "dark" ? "bg-marigold text-ink" : "bg-lagoon-tint text-lagoon-deep"
+          tone === "dark"
+            ? "bg-marigold text-ink"
+            : "bg-lagoon-tint text-lagoon-deep"
         }`}
         aria-hidden="true"
       >
-        {name.split(" ").map((p) => p[0]).join("")}
+        {name
+          .split(" ")
+          .map((p) => p[0])
+          .join("")}
       </span>
       <span>
         <span className="block text-sm font-bold">{name}</span>
-        <span className={`block text-sm ${tone === "dark" ? "text-white/65" : "text-ink-soft"}`}>
+        <span
+          className={`block text-sm ${tone === "dark" ? "text-white/65" : "text-ink-soft"}`}
+        >
           {role}
         </span>
       </span>
@@ -73,7 +88,9 @@ export function Testimonials() {
                 key={t.name}
                 className="flex flex-col justify-between gap-6 rounded-3xl bg-white p-7 ring-1 ring-line"
               >
-                <blockquote className="text-lg leading-relaxed">{t.quote}</blockquote>
+                <blockquote className="text-lg leading-relaxed">
+                  {t.quote}
+                </blockquote>
                 <Person {...t} />
               </figure>
             ))}

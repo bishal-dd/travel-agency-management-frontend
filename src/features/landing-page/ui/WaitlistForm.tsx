@@ -69,8 +69,8 @@ export function WaitlistForm() {
           <p className="font-semibold text-ink">You're on the list!</p>
 
           <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-            Thanks for your interest in Tripdesk. We'll keep you updated as we
-            get closer to launch.
+            Thanks for your interest in Help Make Travel. We'll keep you updated
+            as we get closer to launch.
           </p>
 
           <button

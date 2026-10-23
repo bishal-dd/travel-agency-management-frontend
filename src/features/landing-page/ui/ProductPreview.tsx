@@ -63,7 +63,7 @@ export function ProductPreview() {
           <SectionHeading
             tone="dark"
             title="A dashboard that reads like your day."
-            lead="Open Tripdesk in the morning and see who is departing, who owes a balance and which quotes are waiting on you."
+            lead="Open Help Make Travel in the morning and see who is departing, who owes a balance and which quotes are waiting on you."
           />
           <div
             role="tablist"

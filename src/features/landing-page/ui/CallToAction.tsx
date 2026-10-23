@@ -9,23 +9,23 @@ export function CallToAction() {
         <div className="relative grid overflow-hidden rounded-[2rem] bg-ink text-white shadow-deep lg:grid-cols-[1fr_19rem]">
           <div className="relative p-8 sm:p-12 lg:p-14">
             <h2 className="font-display max-w-xl text-[2.25rem] leading-[1.05] font-medium sm:text-5xl">
-              Your next booking could be your first in Tripdesk.
+              Your next booking could be your first in Help Make Travel.
             </h2>
             <p className="mt-5 max-w-lg text-lg leading-relaxed text-white/70">
               Try every feature free for 14 days. Bring your own customers and
               bookings, or explore with sample data.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button href="/sign-up" variant="onDark" size="lg">
-                Start free trial
+              <Button href="/waitlist" variant="onDark" size="lg">
+                Join the waitlist
               </Button>
-              <Button
+              {/* <Button
                 href="#"
                 size="lg"
                 className="bg-transparent text-white shadow-none ring-1 ring-white/25 ring-inset hover:bg-white/10"
               >
                 Book a demo
-              </Button>
+              </Button> */}
             </div>
           </div>
 

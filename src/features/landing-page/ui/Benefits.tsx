@@ -31,7 +31,7 @@ export function Benefits() {
       <Container>
         <SectionHeading
           title="Less admin between the enquiry and the airport."
-          lead="Agencies move to Tripdesk when the back office starts costing them sales. Here is what changes."
+          lead="Agencies move to Help Make Travel when the back office starts costing them sales. Here is what changes."
         />
 
         <div className="mt-12 overflow-hidden rounded-3xl ring-1 ring-line">
@@ -39,7 +39,9 @@ export function Benefits() {
             <p className="bg-mist px-7 py-4 text-ink-soft">
               The way it works now
             </p>
-            <p className="bg-lagoon px-7 py-4 text-white">With Tripdesk</p>
+            <p className="bg-lagoon px-7 py-4 text-white">
+              With Help Make Travel
+            </p>
           </div>
           <ul>
             {rows.map((r) => (
@@ -66,7 +68,7 @@ export function Benefits() {
                     aria-hidden="true"
                   />
                   <span>
-                    <span className="sr-only">With Tripdesk: </span>
+                    <span className="sr-only">With Help Make Travel: </span>
                     {r.after}
                   </span>
                 </p>

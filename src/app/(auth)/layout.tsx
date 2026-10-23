@@ -16,7 +16,7 @@ export default function AuthLayout({
           <div className="w-full max-w-[26rem]">{children}</div>
         </main>
         <footer className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-soft">
-          <span>© 2026 Tripdesk</span>
+          <span>© 2026 Help Make Travel</span>
           <a href="#" className="hover:text-ink">
             Privacy
           </a>

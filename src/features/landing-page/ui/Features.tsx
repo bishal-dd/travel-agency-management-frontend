@@ -21,14 +21,30 @@ type Feature = {
 
 function CustomerVisual() {
   const people = [
-    { n: "Amara Okafor", t: "3 trips, prefers window seats", c: "bg-marigold" },
-    { n: "Jonas Lindqvist", t: "Passport expires in 4 months", c: "bg-lagoon" },
-    { n: "Priya Raman", t: "Vegetarian, honeymoon in May", c: "bg-ink" },
+    {
+      n: "Tashi Dorji",
+      t: "Family tour, 4 travellers",
+      c: "bg-marigold",
+    },
+    {
+      n: "Emma Wilson",
+      t: "Arrival in Paro, 12 November",
+      c: "bg-lagoon",
+    },
+    {
+      n: "Arjun Mehta",
+      t: "Cultural tour, 7 days",
+      c: "bg-ink",
+    },
   ];
+
   return (
     <ul className="space-y-2">
       {people.map((p) => (
-        <li key={p.n} className="flex items-center gap-3 rounded-xl bg-white p-2.5 ring-1 ring-line">
+        <li
+          key={p.n}
+          className="flex items-center gap-3 rounded-xl bg-white p-2.5 ring-1 ring-line"
+        >
           <span
             className={`grid size-8 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${p.c}`}
           >
@@ -46,9 +62,24 @@ function CustomerVisual() {
 
 function BookingVisual() {
   const rows = [
-    { ref: "TD-2041", trip: "Kyoto in autumn", s: "Confirmed", c: "bg-lagoon-tint text-lagoon-deep" },
-    { ref: "TD-2042", trip: "Marrakech weekend", s: "Awaiting deposit", c: "bg-marigold-tint text-ink" },
-    { ref: "TD-2043", trip: "Patagonia trek", s: "Quote sent", c: "bg-mist text-ink-soft" },
+    {
+      ref: "HMT-2041",
+      trip: "Bhutan Cultural Tour",
+      s: "Confirmed",
+      c: "bg-lagoon-tint text-lagoon-deep",
+    },
+    {
+      ref: "HMT-2042",
+      trip: "Bangkok Holiday",
+      s: "Awaiting deposit",
+      c: "bg-marigold-tint text-ink",
+    },
+    {
+      ref: "HMT-2043",
+      trip: "Himalayan Trek",
+      s: "Quote sent",
+      c: "bg-mist text-ink-soft",
+    },
   ];
   return (
     <ul className="space-y-2">
@@ -58,10 +89,16 @@ function BookingVisual() {
           className="flex items-center justify-between gap-3 rounded-xl bg-white p-2.5 pl-3.5 ring-1 ring-line"
         >
           <span className="min-w-0">
-            <span className="block text-xs text-ink-soft tabular-nums">{r.ref}</span>
-            <span className="block truncate text-sm font-semibold">{r.trip}</span>
+            <span className="block text-xs text-ink-soft tabular-nums">
+              {r.ref}
+            </span>
+            <span className="block truncate text-sm font-semibold">
+              {r.trip}
+            </span>
           </span>
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${r.c}`}>
+          <span
+            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${r.c}`}
+          >
             {r.s}
           </span>
         </li>
@@ -74,42 +111,42 @@ const features: Feature[] = [
   {
     icon: Users,
     title: "Customers",
-    body: "Every traveller's contact details, preferences, passport dates and trip history on one profile your whole team can see.",
+    body: "Keep contact details, traveller preferences, important documents and trip history together in one profile your team can access.",
     wide: true,
     visual: <CustomerVisual />,
   },
   {
     icon: CalendarCheck,
     title: "Bookings",
-    body: "Follow each booking from first enquiry to return flight. See what's confirmed, what's waiting, and what needs a nudge today.",
+    body: "Track every booking from enquiry to departure. See what's confirmed, awaiting payment or needs follow-up.",
     wide: true,
     visual: <BookingVisual />,
   },
   {
     icon: Package,
     title: "Tour packages",
-    body: "Build a package once with pricing, inclusions and departure dates, then reuse it for every customer who asks.",
+    body: "Create reusable packages with pricing, inclusions and departure dates. Spend less time rebuilding the same offers.",
   },
   {
     icon: Route,
     title: "Itineraries",
-    body: "Lay out trips day by day and send a branded itinerary your customers will actually want to open.",
+    body: "Plan trips day by day, organise activities and share professional itineraries with your customers.",
   },
   {
     icon: CreditCard,
     title: "Payments",
-    body: "Record deposits, instalments and balances. Know who has paid and who is overdue without opening a spreadsheet.",
+    body: "Track deposits, instalments, outstanding balances and supplier costs to keep every trip's finances organised.",
   },
   {
     icon: FileText,
     title: "Documents",
-    body: "Passports, visas, vouchers, tickets and invoices stored against the right booking and easy to find at the airport gate.",
+    body: "Keep passports, visas, tickets, vouchers and invoices organised by booking, so important files are easy to find.",
     wide: true,
   },
   {
     icon: Building2,
     title: "Agency operations",
-    body: "Assign work to agents, set who can see what, and track sales and supplier costs across branches.",
+    body: "Assign tasks, manage team access and keep track of bookings and operations across your agency.",
     wide: true,
   },
 ];
@@ -119,8 +156,8 @@ export function Features() {
     <section id="features" className="py-20 sm:py-28">
       <Container>
         <SectionHeading
-          title="Everything an agency touches in a day, in one place."
-          lead="Tripdesk replaces the inbox folders, shared drives and spreadsheets that hold your business together today."
+          title="Everything your agency needs to run smoothly."
+          lead="Bring customer records, bookings, itineraries, payments and documents together in one organised workspace."
         />
 
         <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-6">
@@ -135,7 +172,9 @@ export function Features() {
             >
               <div
                 className={
-                  f.visual ? "grid gap-6 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2 xl:items-center" : ""
+                  f.visual
+                    ? "grid gap-6 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2 xl:items-center"
+                    : ""
                 }
               >
                 <div>

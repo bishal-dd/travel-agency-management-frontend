@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ComponentProps, ReactNode } from "react";
 
 export function Container({
@@ -22,8 +23,7 @@ type ButtonProps = ComponentProps<"a"> & {
 const variants = {
   primary:
     "bg-ink text-white hover:bg-lagoon-deep shadow-[0_8px_20px_-8px_rgb(15_34_51/0.6)]",
-  secondary:
-    "bg-white text-ink ring-1 ring-inset ring-line hover:ring-ink/40",
+  secondary: "bg-white text-ink ring-1 ring-inset ring-line hover:ring-ink/40",
   onDark: "bg-marigold text-ink hover:bg-white",
 };
 
@@ -58,7 +58,11 @@ export function SectionHeading({
   tone?: "light" | "dark";
 }) {
   return (
-    <div className={align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}>
+    <div
+      className={
+        align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-2xl"
+      }
+    >
       <h2
         className={`font-display text-[2rem] leading-[1.1] font-medium sm:text-[2.75rem] ${
           tone === "dark" ? "text-white" : "text-ink"
@@ -81,27 +85,19 @@ export function SectionHeading({
 
 export function Logo({ tone = "light" }: { tone?: "light" | "dark" }) {
   return (
-    <a href="#top" className="inline-flex items-center gap-2.5" aria-label="Tripdesk home">
-      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
-        <rect width="30" height="30" rx="9" className="fill-lagoon" />
-        <path
-          d="M8 20c3-9 7 1 9-5s4-5 5-5"
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeDasharray="0.1 4"
-        />
-        <circle cx="8" cy="20" r="2.4" className="fill-marigold" />
-        <circle cx="22" cy="10" r="2.4" fill="white" />
-      </svg>
-      <span
-        className={`font-display text-[1.35rem] font-semibold ${
-          tone === "dark" ? "text-white" : "text-ink"
-        }`}
-      >
-        Tripdesk
-      </span>
+    <a
+      href="#top"
+      className="inline-flex items-center"
+      aria-label="HelpMakeTravel home"
+    >
+      <Image
+        src="/images/helpmaketravel-logo.svg"
+        alt="HelpMakeTravel"
+        width={220}
+        height={56}
+        priority
+        className={`h-7 w-auto ${tone === "dark" ? "brightness-0 invert" : ""}`}
+      />
     </a>
   );
 }
