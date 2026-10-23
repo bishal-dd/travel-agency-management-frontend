@@ -358,7 +358,7 @@ function AcceptInvitation() {
   // 3. Signed out: sign in or sign up first, then come back here
   if (!user) {
     return (
-      <StatusCard icon={Mail} title="You've been invited to Tripdesk">
+      <StatusCard icon={Mail} title="You've been invited to Help Make Travel">
         <p className="mt-3 text-ink-soft">
           Sign in or create an account using the email address the invitation
           was sent to. You&apos;ll come straight back here to accept it.

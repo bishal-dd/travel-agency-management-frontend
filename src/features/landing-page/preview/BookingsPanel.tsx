@@ -1,16 +1,56 @@
 const stats = [
-  { label: "Departing this week", value: "12" },
+  { label: "Departures this week", value: "12" },
   { label: "Awaiting deposit", value: "5" },
   { label: "Quotes to follow up", value: "8" },
-  { label: "Booked this month", value: "$148,300" },
+  { label: "Bookings this month", value: "24" },
 ];
 
 const rows = [
-  { ref: "TD-2041", who: "Amara Okafor", trip: "Kyoto in autumn", date: "14 Oct", pax: 2, status: "Confirmed", value: "$6,480" },
-  { ref: "TD-2042", who: "Jonas Lindqvist", trip: "Marrakech weekend", date: "18 Oct", pax: 4, status: "Awaiting deposit", value: "$3,920" },
-  { ref: "TD-2043", who: "Priya Raman", trip: "Maldives honeymoon", date: "02 Nov", pax: 2, status: "Confirmed", value: "$11,250" },
-  { ref: "TD-2044", who: "Daniel Mensah", trip: "Patagonia trek", date: "09 Nov", pax: 6, status: "Quote sent", value: "$19,800" },
-  { ref: "TD-2045", who: "Sofia Marchetti", trip: "Amalfi coast drive", date: "21 Nov", pax: 2, status: "Confirmed", value: "$5,140" },
+  {
+    ref: "HMT-2041",
+    who: "Emma Wilson",
+    trip: "Bhutan Cultural Tour",
+    date: "14 Nov",
+    pax: 2,
+    status: "Confirmed",
+    value: "Nu. 186,000",
+  },
+  {
+    ref: "HMT-2042",
+    who: "Tashi Dorji",
+    trip: "Bangkok Holiday",
+    date: "18 Nov",
+    pax: 4,
+    status: "Awaiting deposit",
+    value: "Nu. 92,000",
+  },
+  {
+    ref: "HMT-2043",
+    who: "Priya Sharma",
+    trip: "Maldives Honeymoon",
+    date: "02 Dec",
+    pax: 2,
+    status: "Confirmed",
+    value: "Nu. 245,000",
+  },
+  {
+    ref: "HMT-2044",
+    who: "Daniel Miller",
+    trip: "Himalayan Trek",
+    date: "09 Dec",
+    pax: 6,
+    status: "Quote sent",
+    value: "Nu. 320,000",
+  },
+  {
+    ref: "HMT-2045",
+    who: "Sonam Choden",
+    trip: "Singapore Getaway",
+    date: "21 Dec",
+    pax: 2,
+    status: "Confirmed",
+    value: "Nu. 118,000",
+  },
 ];
 
 const tone: Record<string, string> = {
@@ -24,7 +64,10 @@ export function BookingsPanel() {
     <div>
       <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-xl bg-white p-4 ring-1 ring-line">
+          <div
+            key={s.label}
+            className="rounded-xl bg-white p-4 ring-1 ring-line"
+          >
             <dt className="text-xs text-ink-soft">{s.label}</dt>
             <dd className="mt-1 text-2xl font-bold tabular-nums">{s.value}</dd>
           </div>
@@ -40,8 +83,19 @@ export function BookingsPanel() {
           <table className="w-full min-w-[34rem] text-left text-sm">
             <thead className="text-xs text-ink-soft">
               <tr>
-                {["Ref", "Customer", "Trip", "Departs", "Travellers", "Status", "Value"].map((h, i) => (
-                  <th key={h} className={`px-4 py-2.5 font-medium ${i === 6 ? "text-right" : ""}`}>
+                {[
+                  "Ref",
+                  "Customer",
+                  "Trip",
+                  "Departs",
+                  "Travellers",
+                  "Status",
+                  "Value",
+                ].map((h, i) => (
+                  <th
+                    key={h}
+                    className={`px-4 py-2.5 font-medium ${i === 6 ? "text-right" : ""}`}
+                  >
                     {h}
                   </th>
                 ))}
@@ -50,17 +104,27 @@ export function BookingsPanel() {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.ref} className="border-t border-line">
-                  <td className="px-4 py-3 whitespace-nowrap text-ink-soft tabular-nums">{r.ref}</td>
-                  <td className="px-4 py-3 font-semibold whitespace-nowrap">{r.who}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-ink-soft tabular-nums">
+                    {r.ref}
+                  </td>
+                  <td className="px-4 py-3 font-semibold whitespace-nowrap">
+                    {r.who}
+                  </td>
                   <td className="px-4 py-3 whitespace-nowrap">{r.trip}</td>
-                  <td className="px-4 py-3 whitespace-nowrap tabular-nums">{r.date}</td>
+                  <td className="px-4 py-3 whitespace-nowrap tabular-nums">
+                    {r.date}
+                  </td>
                   <td className="px-4 py-3 tabular-nums">{r.pax}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap ${tone[r.status]}`}>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap ${tone[r.status]}`}
+                    >
                       {r.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right font-semibold tabular-nums">{r.value}</td>
+                  <td className="px-4 py-3 text-right font-semibold tabular-nums">
+                    {r.value}
+                  </td>
                 </tr>
               ))}
             </tbody>

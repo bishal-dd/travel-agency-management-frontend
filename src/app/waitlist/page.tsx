@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { WaitlistForm } from "@/src/features/landing-page/ui/WaitlistForm";
 import { BackToHome } from "@/src/features/landing-page/ui/BackToHome";
+import { Logo } from "@/src/features/landing-page/ui/ui";
 
 const features = [
   {
@@ -32,40 +33,13 @@ const features = [
   },
 ];
 
-function LogoMark() {
-  return (
-    <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
-      <rect width="30" height="30" rx="9" className="fill-lagoon" />
-      <path
-        d="M8 20c3-9 7 1 9-5s4-5 5-5"
-        fill="none"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeDasharray="0.1 4"
-      />
-      <circle cx="8" cy="20" r="2.4" className="fill-marigold" />
-      <circle cx="22" cy="10" r="2.4" fill="white" />
-    </svg>
-  );
-}
-
 export default function WaitlistPage() {
   return (
     <div className="grid min-h-dvh bg-paper lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       {/* Form side */}
       <div className="contours flex flex-col px-5 py-6 sm:px-10 lg:px-16">
         <header className="flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2.5"
-            aria-label="Tripdesk home"
-          >
-            <LogoMark />
-            <span className="font-display text-[1.35rem] font-semibold text-ink">
-              Tripdesk
-            </span>
-          </Link>
+          <Logo />
           <BackToHome />
         </header>
 
@@ -79,8 +53,9 @@ export default function WaitlistPage() {
               Be first to run your agency from one desk.
             </h1>
             <p className="mt-4 text-lg leading-relaxed text-ink-soft">
-              Tripdesk is opening to travel agencies in small groups. Join the
-              waitlist and we&apos;ll email you when your spot is ready.
+              Help Make Travel is opening to travel agencies in small groups.
+              Join the waitlist and we&apos;ll email you when your spot is
+              ready.
             </p>
 
             <div className="mt-8 rounded-3xl bg-white p-6 shadow-lift ring-1 ring-line sm:p-7">
@@ -97,7 +72,7 @@ export default function WaitlistPage() {
         </main>
 
         <footer className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-soft">
-          <span>© 2026 Tripdesk</span>
+          <span>© 2026 Help Make Travel</span>
           <Link href="/privacy" className="hover:text-ink">
             Privacy
           </Link>

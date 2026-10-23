@@ -169,7 +169,7 @@ export default function OnboardingPage() {
         <main className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-[26rem]">
             <p className="text-sm font-semibold text-lagoon">
-              {firstName ? `Welcome, ${firstName}` : "Welcome to Tripdesk"}
+              {firstName ? `Welcome, ${firstName}` : "Welcome to Help Make Travel"}
             </p>
             <h1 className="font-display mt-2 text-4xl leading-tight font-medium">
               Create your travel agency

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { SignInForm } from "@/src/features/auth/SignInForm";
 
-export const metadata: Metadata = { title: "Sign in | Tripdesk" };
+export const metadata: Metadata = { title: "Sign in | Help Make Travel" };
 
 export default function SignInPage() {
   return (

@@ -2,7 +2,9 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { SignUpForm, SignUpIntro } from "@/src/features/auth/SignUpForm";
 
-export const metadata: Metadata = { title: "Create your account | Tripdesk" };
+export const metadata: Metadata = {
+  title: "Create your account | Help Make Travel",
+};
 
 export default function SignUpPage() {
   return (

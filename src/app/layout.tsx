@@ -5,9 +5,9 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Tripdesk | Travel agency management platform",
+  title: "Help Make Travel | Travel agency management platform",
   description:
-    "Customers, bookings, tour packages, itineraries, payments and documents in one place. Tripdesk is the operating system for modern travel agencies.",
+    "Customers, bookings, tour packages, itineraries, payments and documents in one place. Help Make Travel is the operating system for modern travel agencies.",
 };
 
 export default function RootLayout({

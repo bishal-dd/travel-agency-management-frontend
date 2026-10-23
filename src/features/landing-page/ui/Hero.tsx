@@ -9,9 +9,21 @@ import { Container } from "./ui";
 import { WaitlistForm } from "./WaitlistForm";
 
 const stops = [
-  { day: "Day 1", place: "Lisbon", note: "Arrival, Alfama walking tour" },
-  { day: "Day 3", place: "Sintra", note: "Palace visit, private driver" },
-  { day: "Day 5", place: "Porto", note: "Douro valley cruise" },
+  {
+    day: "Day 1",
+    place: "Paro",
+    note: "Airport pickup, hotel check-in",
+  },
+  {
+    day: "Day 3",
+    place: "Thimphu",
+    note: "Buddha Dordenma, city sightseeing",
+  },
+  {
+    day: "Day 5",
+    place: "Punakha",
+    note: "Punakha Dzong, suspension bridge",
+  },
 ];
 
 function ItineraryCard() {
@@ -20,11 +32,13 @@ function ItineraryCard() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold text-lagoon">Tour package</p>
+
           <p className="font-display mt-1 text-2xl font-medium">
-            Portugal coast, 7 days
+            Bhutan Highlights, 7 days
           </p>
+
           <p className="mt-1 text-sm text-ink-soft">
-            Okafor family, 4 travellers
+            Sharma family, 4 travellers
           </p>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-lagoon-tint px-2.5 py-1 text-xs font-semibold text-lagoon-deep">
@@ -83,9 +97,10 @@ function ItineraryCard() {
 
       <div className="mt-5 flex items-center justify-between border-t border-dashed border-line pt-4">
         <div className="flex items-center gap-2 text-sm text-ink-soft">
-          <FileText size={15} /> 6 documents attached
+          <FileText size={15} />6 documents attached
         </div>
-        <p className="text-sm font-bold tabular-nums">$8,420</p>
+
+        <p className="text-sm font-bold tabular-nums">Nu. 85,000</p>
       </div>
     </div>
   );
@@ -106,9 +121,9 @@ export function Hero() {
             className="animate-rise mt-6 max-w-xl text-lg leading-relaxed text-ink-soft sm:text-xl"
             style={{ animationDelay: "120ms" }}
           >
-            Tripdesk keeps customers, bookings, tour packages, itineraries,
-            payments and documents in one place, so your team spends the day
-            selling trips instead of chasing spreadsheets.
+            Help Make Travel keeps customers, bookings, tour packages,
+            itineraries, payments and documents in one place, so your team
+            spends the day selling trips instead of chasing spreadsheets.
           </p>
 
           <div
@@ -145,8 +160,8 @@ export function Hero() {
               <CreditCard size={17} />
             </span>
             <div>
-              <p className="text-xs text-ink-soft">Deposit received</p>
-              <p className="text-sm font-bold tabular-nums">$2,500.00</p>
+              <p className="text-xs text-ink-soft">Payment received</p>
+              <p className="text-sm font-bold tabular-nums">Nu. 25,000</p>
             </div>
           </div>
 
@@ -159,7 +174,7 @@ export function Hero() {
             </span>
             <div>
               <p className="text-xs text-white/60">Departing this week</p>
-              <p className="text-sm font-bold">12 bookings, all paid</p>
+              <p className="text-sm font-bold">12 bookings, all confirmed</p>
             </div>
           </div>
         </div>
