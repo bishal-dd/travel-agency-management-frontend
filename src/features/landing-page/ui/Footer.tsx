@@ -1,23 +1,14 @@
+import Link from "next/link";
 import { Container, Logo } from "./ui";
 
 const columns = [
   {
-    title: "Product",
+    title: "Legal",
     links: [
-      "Customers",
-      "Bookings",
-      "Tour packages",
-      "Itineraries",
-      "Payments",
-      "Documents",
+      { label: "Privacy Policy", href: "/privacy-policy" },
+      { label: "Terms & Conditions", href: "/terms-and-conditions" },
     ],
   },
-  { title: "Company", links: ["About", "Customers", "Careers", "Contact"] },
-  {
-    title: "Resources",
-    links: ["Help centre", "Guides", "Product updates", "Status"],
-  },
-  { title: "Legal", links: ["Privacy", "Terms", "Security"] },
 ];
 
 export function Footer() {
@@ -32,19 +23,19 @@ export function Footer() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 sm:justify-items-end">
           {columns.map((c) => (
             <nav key={c.title} aria-label={c.title}>
               <h3 className="text-sm font-bold">{c.title}</h3>
               <ul className="mt-4 space-y-2.5">
-                {c.links.map((l) => (
-                  <li key={l}>
-                    <a
-                      href="#"
+                {c.links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
                       className="text-sm text-ink-soft transition-colors hover:text-ink"
                     >
-                      {l}
-                    </a>
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
