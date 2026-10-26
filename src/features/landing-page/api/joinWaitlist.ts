@@ -2,7 +2,14 @@ export type WaitlistInput = {
   email: string;
 };
 
-export async function joinWaitlist(input: WaitlistInput) {
+export type WaitlistResponse = {
+  success: boolean;
+  message: string;
+};
+
+export async function joinWaitlist(
+  input: WaitlistInput,
+): Promise<WaitlistResponse> {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   if (!backendUrl) {
@@ -11,20 +18,17 @@ export async function joinWaitlist(input: WaitlistInput) {
 
   const res = await fetch(`${backendUrl}/api/waitlist`, {
     method: "POST",
-    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(input),
   });
 
+  const data = (await res.json()) as WaitlistResponse;
+
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Failed to join the waitlist");
+    throw new Error(data.message || "Failed to join the waitlist");
   }
 
-  return res.json() as Promise<{
-    success: boolean;
-    message: string;
-  }>;
+  return data;
 }

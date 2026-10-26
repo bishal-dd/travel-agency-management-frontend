@@ -14,7 +14,8 @@ import { useJoinWaitlist } from "../hooks/useJoinWaitlist";
 export function WaitlistForm() {
   const [email, setEmail] = useState("");
 
-  const { mutate, isPending, isSuccess, error, reset } = useJoinWaitlist();
+  const { mutate, isPending, isSuccess, data, error, reset } =
+    useJoinWaitlist();
 
   const errorMessage =
     error instanceof Error
@@ -66,7 +67,7 @@ export function WaitlistForm() {
         />
 
         <div>
-          <p className="font-semibold text-ink">You're on the list!</p>
+          <p className="font-semibold text-ink">Thank you for your interest!</p>
 
           <p className="mt-1 text-sm leading-relaxed text-ink-soft">
             Thanks for your interest in Help Make Travel. We'll keep you updated
