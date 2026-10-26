@@ -26,14 +26,20 @@ const stops = [
   },
 ];
 
+const perks = [
+  "Early access updates",
+  "Built for travel agencies",
+  "All your operations in one place",
+];
+
 function ItineraryCard() {
   return (
-    <div className="relative w-full max-w-md rounded-3xl bg-white p-5 shadow-deep ring-1 ring-line sm:p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+    <div className="relative w-full max-w-md rounded-2xl bg-white p-4 shadow-deep ring-1 ring-line sm:rounded-3xl sm:p-6">
+      <div className="flex items-start justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
           <p className="text-xs font-semibold text-lagoon">Tour package</p>
 
-          <p className="font-display mt-1 text-2xl font-medium">
+          <p className="font-display mt-1 text-xl leading-tight font-medium sm:text-2xl">
             Bhutan Highlights, 7 days
           </p>
 
@@ -41,13 +47,13 @@ function ItineraryCard() {
             Sharma family, 4 travellers
           </p>
         </div>
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-lagoon-tint px-2.5 py-1 text-xs font-semibold text-lagoon-deep">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-lagoon-tint px-2 py-1 text-[11px] font-semibold text-lagoon-deep sm:px-2.5 sm:text-xs">
           <Check size={13} strokeWidth={3} /> Confirmed
         </span>
       </div>
 
       {/* Route map */}
-      <div className="relative mt-5 overflow-hidden rounded-2xl bg-mist">
+      <div className="relative mt-4 overflow-hidden rounded-xl bg-mist sm:mt-5 sm:rounded-2xl">
         <svg viewBox="0 0 400 150" className="block w-full" aria-hidden="true">
           <path
             d="M-10 120 C60 90 70 135 130 110 S220 40 260 70 330 60 410 20 V160 H-10Z"
@@ -80,27 +86,72 @@ function ItineraryCard() {
         </svg>
       </div>
 
-      <ol className="mt-5 space-y-3.5">
+      <ol className="mt-4 space-y-3 sm:mt-5 sm:space-y-3.5">
         {stops.map((s) => (
-          <li key={s.day} className="flex items-center gap-3">
-            <span className="w-12 shrink-0 text-xs font-semibold text-ink-soft">
+          <li
+            key={s.day}
+            className="flex items-start gap-2.5 sm:items-center sm:gap-3"
+          >
+            <span className="w-11 shrink-0 pt-0.5 text-xs font-semibold text-ink-soft sm:w-12 sm:pt-0">
               {s.day}
             </span>
-            <MapPin size={15} className="shrink-0 text-lagoon" />
-            <span className="min-w-0 truncate text-sm">
-              <span className="font-semibold">{s.place}</span>
-              <span className="text-ink-soft">, {s.note}</span>
+            <MapPin size={15} className="mt-0.5 shrink-0 text-lagoon sm:mt-0" />
+            {/* Stacks on phones so the note isn't cut off; single truncated line from sm up */}
+            <span className="min-w-0 text-sm sm:truncate">
+              <span className="block font-semibold sm:inline">{s.place}</span>
+              <span className="hidden text-ink-soft sm:inline">, </span>
+              <span className="block text-ink-soft sm:inline">{s.note}</span>
             </span>
           </li>
         ))}
       </ol>
 
-      <div className="mt-5 flex items-center justify-between border-t border-dashed border-line pt-4">
-        <div className="flex items-center gap-2 text-sm text-ink-soft">
-          <FileText size={15} />6 documents attached
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-dashed border-line pt-4 sm:mt-5">
+        <div className="flex min-w-0 items-center gap-2 text-sm text-ink-soft">
+          <FileText size={15} className="shrink-0" />
+          <span className="truncate">6 documents attached</span>
         </div>
 
-        <p className="text-sm font-bold tabular-nums">Nu. 85,000</p>
+        <p className="shrink-0 text-sm font-bold tabular-nums">Nu. 85,000</p>
+      </div>
+    </div>
+  );
+}
+
+function PaymentChip({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`flex items-center gap-3 rounded-2xl bg-white p-3 pr-4 shadow-lift ring-1 ring-line ${className}`}
+    >
+      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-marigold-tint text-ink">
+        <CreditCard size={17} />
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs text-ink-soft">Payment received</p>
+        <p className="text-sm font-bold tabular-nums">Nu. 25,000</p>
+      </div>
+    </div>
+  );
+}
+
+function DepartingChip({
+  className = "",
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-3 rounded-2xl bg-ink p-3 pr-4 text-white shadow-lift ${className}`}
+      style={style}
+    >
+      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/10">
+        <CalendarCheck size={17} />
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs text-white/60">Departing this week</p>
+        <p className="text-sm font-bold">12 bookings, all confirmed</p>
       </div>
     </div>
   );
@@ -110,15 +161,15 @@ export function Hero() {
   return (
     <section
       id="top"
-      className="contours relative overflow-hidden pt-28 pb-16 sm:pt-40 sm:pb-28"
+      className="contours relative overflow-hidden pt-24 pb-14 sm:pt-40 sm:pb-28"
     >
-      <Container className="grid items-center gap-14 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
-        <div>
-          <h1 className="font-display animate-rise text-[2.6rem] leading-[1.02] font-medium text-ink sm:text-6xl lg:text-[4.25rem]">
+      <Container className="grid items-center gap-12 sm:gap-20 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
+        <div className="min-w-0">
+          <h1 className="font-display animate-rise text-[2.25rem] leading-[1.05] font-medium text-balance text-ink min-[400px]:text-[2.6rem] sm:text-6xl sm:leading-[1.02] lg:text-[4.25rem]">
             Run your whole travel agency from one desk.
           </h1>
           <p
-            className="animate-rise mt-6 max-w-xl text-lg leading-relaxed text-ink-soft sm:text-xl"
+            className="animate-rise mt-5 max-w-xl text-base leading-relaxed text-ink-soft sm:mt-6 sm:text-xl"
             style={{ animationDelay: "120ms" }}
           >
             Help Make Travel keeps customers, bookings, tour packages,
@@ -127,23 +178,24 @@ export function Hero() {
           </p>
 
           <div
-            className="animate-rise mt-8"
+            className="animate-rise mt-7 sm:mt-8"
             style={{ animationDelay: "240ms" }}
           >
             <WaitlistForm />
           </div>
 
           <ul
-            className="animate-rise mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft"
+            className="animate-rise mt-6 flex flex-col gap-2 text-sm text-ink-soft sm:mt-7 sm:flex-row sm:flex-wrap sm:gap-x-6"
             style={{ animationDelay: "340ms" }}
           >
-            {[
-              "Early access updates",
-              "Built for travel agencies",
-              "All your operations in one place",
-            ].map((t) => (
+            {perks.map((t) => (
               <li key={t} className="flex items-center gap-1.5">
-                <Check size={15} strokeWidth={3} className="text-lagoon" /> {t}
+                <Check
+                  size={15}
+                  strokeWidth={3}
+                  className="shrink-0 text-lagoon"
+                />
+                {t}
               </li>
             ))}
           </ul>
@@ -155,27 +207,17 @@ export function Hero() {
         >
           <ItineraryCard />
 
-          <div className="animate-bob absolute -top-12 -right-2 hidden items-center gap-3 rounded-2xl bg-white p-3 pr-4 shadow-lift ring-1 ring-line sm:flex lg:-right-8">
-            <span className="grid size-9 place-items-center rounded-xl bg-marigold-tint text-ink">
-              <CreditCard size={17} />
-            </span>
-            <div>
-              <p className="text-xs text-ink-soft">Payment received</p>
-              <p className="text-sm font-bold tabular-nums">Nu. 25,000</p>
-            </div>
-          </div>
-
-          <div
-            className="animate-bob absolute -bottom-12 -left-3 hidden items-center gap-3 rounded-2xl bg-ink p-3 pr-4 text-white shadow-lift sm:flex lg:-left-10"
+          {/* Floating chips: tablet and up */}
+          <PaymentChip className="animate-bob absolute -top-12 right-0 hidden sm:flex lg:-right-8" />
+          <DepartingChip
+            className="animate-bob absolute -bottom-12 left-0 hidden sm:flex lg:-left-10"
             style={{ animationDelay: "-3.5s" }}
-          >
-            <span className="grid size-9 place-items-center rounded-xl bg-white/10">
-              <CalendarCheck size={17} />
-            </span>
-            <div>
-              <p className="text-xs text-white/60">Departing this week</p>
-              <p className="text-sm font-bold">12 bookings, all confirmed</p>
-            </div>
+          />
+
+          {/* Phones: same chips in normal flow below the card */}
+          <div className="mt-3 grid gap-3 sm:hidden">
+            <PaymentChip />
+            <DepartingChip />
           </div>
         </div>
       </Container>
