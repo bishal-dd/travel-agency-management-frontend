@@ -4,9 +4,12 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Bus,
   CalendarCheck,
   CreditCard,
   FileText,
+  Hotel,
+  IdCard,
   LayoutDashboard,
   LogOut,
   Package,
@@ -32,8 +35,10 @@ const nav: NavItem[] = [
   {
     label: "Hotels",
     href: "/dashboard/hotels",
-    icon: UsersRound,
+    icon: Hotel,
   },
+  { label: "Drivers", href: "/dashboard/drivers", icon: IdCard },
+  { label: "Vehicles", href: "/dashboard/vehicles", icon: Bus },
   {
     label: "Bookings",
     href: "/dashboard/bookings",
