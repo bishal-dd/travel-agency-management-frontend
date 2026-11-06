@@ -15,6 +15,7 @@ import {
   LogOut,
   Package,
   Plane,
+  Ticket,
   Users,
   UsersRound,
   type LucideIcon,
@@ -41,6 +42,7 @@ const nav: NavItem[] = [
   { label: "Drivers", href: "/dashboard/drivers", icon: IdCard },
   { label: "Vehicles", href: "/dashboard/vehicles", icon: Bus },
   { label: "Guides", href: "/dashboard/guides", icon: Compass },
+  { label: "Services", href: "/dashboard/services", icon: Ticket },
   {
     label: "Bookings",
     href: "/dashboard/bookings",
