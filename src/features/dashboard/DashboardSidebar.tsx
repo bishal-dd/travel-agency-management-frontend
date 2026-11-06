@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Bus,
   CalendarCheck,
+  Compass,
   CreditCard,
   FileText,
   Hotel,
@@ -39,6 +40,7 @@ const nav: NavItem[] = [
   },
   { label: "Drivers", href: "/dashboard/drivers", icon: IdCard },
   { label: "Vehicles", href: "/dashboard/vehicles", icon: Bus },
+  { label: "Guides", href: "/dashboard/guides", icon: Compass },
   {
     label: "Bookings",
     href: "/dashboard/bookings",
