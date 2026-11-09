@@ -43,11 +43,12 @@ const nav: NavItem[] = [
   { label: "Vehicles", href: "/dashboard/vehicles", icon: Bus },
   { label: "Guides", href: "/dashboard/guides", icon: Compass },
   { label: "Services", href: "/dashboard/services", icon: Ticket },
+  { label: "Itineraries", href: "/dashboard/itineraries", icon: CalendarCheck },
+  { label: "Customers", href: "/dashboard/customers", icon: UsersRound },
   {
     label: "Bookings",
     href: "/dashboard/bookings",
     icon: CalendarCheck,
-    soon: true,
   },
   { label: "Packages", href: "/dashboard/packages", icon: Package, soon: true },
   { label: "Trips", href: "/dashboard/trips", icon: Plane },
