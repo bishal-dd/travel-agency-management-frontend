@@ -43,16 +43,20 @@ export function ListToolbar({
   onFilter,
   counts,
   busy,
+  children,
 }: {
   query: string;
   onQuery: (q: string) => void;
   placeholder: string;
-  filter: Filter;
-  onFilter: (f: Filter) => void;
+  /** Leave filter / onFilter out to hide the status tabs (e.g. when the API can't filter by status). */
+  filter?: Filter;
+  onFilter?: (f: Filter) => void;
   /** Optional per-tab counts (only possible when the whole list is loaded). */
   counts?: Record<Filter, number>;
   /** Shows a spinner in the search box while results load. */
   busy?: boolean;
+  /** Extra filters (e.g. a type switch), shown next to the status tabs. */
+  children?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -76,30 +80,35 @@ export function ListToolbar({
         />
       </label>
 
-      <div
-        role="tablist"
-        aria-label="Filter by status"
-        className="flex gap-1 self-start rounded-full bg-mist p-1 sm:self-auto"
-      >
-        {(["all", "active", "inactive"] as const).map((f) => (
-          <button
-            key={f}
-            role="tab"
-            type="button"
-            aria-selected={filter === f}
-            onClick={() => onFilter(f)}
-            className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold capitalize transition-colors ${
-              filter === f
-                ? "bg-white text-ink shadow-sm"
-                : "text-ink-soft hover:text-ink"
-            }`}
+      <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+        {children}
+        {filter && onFilter && (
+          <div
+            role="tablist"
+            aria-label="Filter by status"
+            className="flex gap-1 self-start rounded-full bg-mist p-1 sm:self-auto"
           >
-            {f}
-            {counts && (
-              <span className="text-xs text-ink-soft">{counts[f]}</span>
-            )}
-          </button>
-        ))}
+            {(["all", "active", "inactive"] as const).map((f) => (
+              <button
+                key={f}
+                role="tab"
+                type="button"
+                aria-selected={filter === f}
+                onClick={() => onFilter(f)}
+                className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold capitalize transition-colors ${
+                  filter === f
+                    ? "bg-white text-ink shadow-sm"
+                    : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                {f}
+                {counts && (
+                  <span className="text-xs text-ink-soft">{counts[f]}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
