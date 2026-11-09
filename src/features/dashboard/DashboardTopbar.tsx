@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Menu, Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import type { AgencyDashboard } from "./useAgencyDashboard";
 import { Logo } from "../landing-page/ui/ui";
 
@@ -76,14 +76,6 @@ export function DashboardTopbar({ d, onOpenMenu }: Props) {
           </kbd>
         </label>
       </form>
-
-      <button
-        type="button"
-        aria-label="Notifications"
-        className="ml-auto grid size-9 shrink-0 place-items-center rounded-lg text-ink-soft hover:bg-mist hover:text-ink"
-      >
-        <Bell size={16} />
-      </button>
 
       {/* On desktop the sidebar footer already shows the user, so the avatar is mobile-only. */}
       <span className="hidden lg:block lg:w-12" aria-hidden="true" />
