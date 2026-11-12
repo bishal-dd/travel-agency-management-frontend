@@ -1,9 +1,15 @@
-import { DraftDay } from "../../itineraries/utils/editorState";
+import {
+  type DraftLine,
+  lineProblem,
+  lineToInput,
+  linesFromDay,
+} from "./dayPlanState";
 import type {
   BookingDayInput,
   BookingDetail,
   TravellerInput,
 } from "../types/booking";
+import { DraftDay } from "../../itineraries/utils/editorState";
 
 /** Travellers and days are edited in memory and sent with one Save. */
 
@@ -41,8 +47,13 @@ export function newTraveller(isLead: boolean): DraftTraveller {
   };
 }
 
-/** Booking days reuse the itinerary editor's day shape (with no services). */
-export function daysFrom(b: BookingDetail): DraftDay[] {
+/**
+ * Booking days reuse the itinerary editor's day shape, plus what's used on
+ * the day (hotel, vehicle, guide, services, other) — each priced from its rate.
+ */
+export type BookingDraftDay = DraftDay & { lines: DraftLine[] };
+
+export function daysFrom(b: BookingDetail): BookingDraftDay[] {
   return b.days.map((d) => ({
     key: d.id,
     title: d.title,
@@ -53,6 +64,7 @@ export function daysFrom(b: BookingDetail): DraftDay[] {
     overnightLocation: d.overnightLocation ?? "",
     suggestedHotel: d.suggestedHotel,
     services: [],
+    lines: linesFromDay(d),
   }));
 }
 
@@ -68,7 +80,7 @@ export function travellersToInput(ts: DraftTraveller[]): TravellerInput[] {
   }));
 }
 
-export function daysToInput(days: DraftDay[]): BookingDayInput[] {
+export function daysToInput(days: BookingDraftDay[]): BookingDayInput[] {
   return days.map((d) => ({
     title: d.title.trim(),
     description: textOrNull(d.description),
@@ -77,11 +89,23 @@ export function daysToInput(days: DraftDay[]): BookingDayInput[] {
     meals: d.meals,
     overnightLocation: textOrNull(d.overnightLocation),
     suggestedHotelId: d.suggestedHotel?.id ?? null,
+    lines: d.lines.map(lineToInput),
   }));
 }
 
 export const sameTravellers = (a: DraftTraveller[], b: DraftTraveller[]) =>
   JSON.stringify(travellersToInput(a)) === JSON.stringify(travellersToInput(b));
 
-export const sameDays = (a: DraftDay[], b: DraftDay[]) =>
+/** The first thing stopping the days from saving, e.g. "Day 2: Choose a vehicle". */
+export function daysProblem(days: BookingDraftDay[]): string | null {
+  for (const [i, d] of days.entries()) {
+    for (const l of d.lines) {
+      const problem = lineProblem(l);
+      if (problem) return `Day ${i + 1}: ${problem}.`;
+    }
+  }
+  return null;
+}
+
+export const sameDays = (a: BookingDraftDay[], b: BookingDraftDay[]) =>
   JSON.stringify(daysToInput(a)) === JSON.stringify(daysToInput(b));

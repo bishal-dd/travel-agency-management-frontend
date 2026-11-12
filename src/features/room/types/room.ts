@@ -6,6 +6,9 @@ export interface CreateRoomPayload {
   maxAdults?: number;
   maxChildren?: number;
   totalRooms?: number;
+  ratePrice?: string | null;
+  rateCost?: string | null;
+  rateCurrency?: string | null;
   status?: "active" | "inactive";
 }
 
@@ -18,6 +21,9 @@ export interface Room {
   maxAdults: number;
   maxChildren: number;
   totalRooms: number;
+  ratePrice: string | null;
+  rateCost: string | null;
+  rateCurrency: string | null;
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
@@ -41,6 +47,9 @@ export interface UpdateRoomPayload {
   maxAdults?: number;
   maxChildren?: number;
   totalRooms?: number;
+  ratePrice?: string | null;
+  rateCost?: string | null;
+  rateCurrency?: string | null;
   status?: "active" | "inactive";
 }
 

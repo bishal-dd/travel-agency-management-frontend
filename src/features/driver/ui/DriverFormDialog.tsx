@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import {
   Field,
   FormFooter,
@@ -20,8 +21,20 @@ type FormState = {
   phone: string;
   email: string;
   licenseNumber: string;
+  /** What the agency pays the driver per day; "" = not set. */
+  dailyCost: string;
+  rateCurrency: string;
   status: Status;
 };
+
+/** BTN first: drivers are usually paid in ngultrum. */
+const RATE_CURRENCIES = ["BTN", "USD", "INR", "EUR"];
+
+const isMoney = (v: string) =>
+  /^\d{1,8}(\.\d{1,2})?$/.test(v.trim().replace(/,/g, ""));
+/** "1500.00" → "1500", null → "" */
+const moneyText = (v: string | null | undefined) =>
+  v == null ? "" : String(Number(v));
 
 const empty: FormState = {
   name: "",
@@ -29,6 +42,8 @@ const empty: FormState = {
   phone: "",
   email: "",
   licenseNumber: "",
+  dailyCost: "",
+  rateCurrency: "BTN",
   status: "active",
 };
 
@@ -44,16 +59,22 @@ function validate(f: FormState): Errors {
   if (f.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim()))
     e.email = "Enter a valid email address.";
   if (!f.licenseNumber.trim()) e.licenseNumber = "License number is required.";
+  if ((f.dailyCost ?? "").trim() && !isMoney(f.dailyCost))
+    e.dailyCost = "Enter an amount like 1500 or 45.50.";
   return e;
 }
 
 function toInput(f: FormState): CreateDriverInput {
+  const cost = (f.dailyCost ?? "").trim().replace(/,/g, "");
   return {
     name: f.name.trim(),
     cid: f.cid.trim(),
     phone: f.phone.trim(),
     email: f.email.trim() || undefined,
     licenseNumber: f.licenseNumber.trim().toUpperCase(),
+    // Empty = no cost (null clears an existing one on edit).
+    dailyCost: cost || null,
+    rateCurrency: cost ? f.rateCurrency || "BTN" : null,
     status: f.status,
   };
 }
@@ -85,6 +106,8 @@ export function DriverFormDialog({ open, onClose, driver }: Props) {
             phone: driver.phone,
             email: driver.email ?? "",
             licenseNumber: driver.licenseNumber,
+            dailyCost: moneyText(driver.dailyCost),
+            rateCurrency: driver.rateCurrency ?? "BTN",
             status: driver.status,
           }
         : empty,
@@ -96,8 +119,10 @@ export function DriverFormDialog({ open, onClose, driver }: Props) {
   }, [open, driver]);
 
   const set =
-    (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setForm((f) => ({ ...f, [key]: e.target.value }));
+    (key: keyof FormState) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      // Merge over `empty` so every field always exists (e.g. after a hot reload).
+      setForm((f) => ({ ...empty, ...f, [key]: e.target.value }));
       if (errors[key]) setErrors((x) => ({ ...x, [key]: undefined }));
     };
 
@@ -206,9 +231,65 @@ export function DriverFormDialog({ open, onClose, driver }: Props) {
           <Field label="Status" className="sm:col-span-2">
             <StatusToggle
               value={form.status}
-              onChange={(s) => setForm((f) => ({ ...f, status: s }))}
+              onChange={(s) => setForm((f) => ({ ...empty, ...f, status: s }))}
             />
           </Field>
+
+          <div className="space-y-3 border-t border-line pt-5 sm:col-span-2">
+            <div>
+              <p className="text-sm font-semibold text-ink">Daily cost</p>
+              <p className="text-xs text-ink-soft">
+                What you pay this driver per day (wage or allowance). It&apos;s
+                added to the vehicle&apos;s cost on bookings, so profit is
+                accurate. There&apos;s no price here: customers pay the
+                vehicle&apos;s rate, which already includes the driver. Leave it
+                empty if the vehicle&apos;s cost already covers the driver.
+              </p>
+            </div>
+            <div className="grid grid-cols-[6.5rem_1fr] gap-3 sm:max-w-sm">
+              <Field label="Currency" htmlFor="d-rate-currency">
+                <div className="relative">
+                  <select
+                    id="d-rate-currency"
+                    value={form.rateCurrency || "BTN"}
+                    onChange={set("rateCurrency")}
+                    className={`${inputCls} appearance-none pr-8`}
+                  >
+                    {[
+                      ...new Set([
+                        form.rateCurrency || "BTN",
+                        ...RATE_CURRENCIES,
+                      ]),
+                    ].map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={14}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-soft"
+                  />
+                </div>
+              </Field>
+              <Field
+                label="Cost per day"
+                htmlFor="d-daily-cost"
+                error={errors.dailyCost}
+              >
+                <input
+                  id="d-daily-cost"
+                  inputMode="decimal"
+                  value={form.dailyCost ?? ""}
+                  onChange={set("dailyCost")}
+                  aria-invalid={!!errors.dailyCost}
+                  placeholder="Not set"
+                  className={`${inputCls} text-right tabular-nums`}
+                />
+              </Field>
+            </div>
+          </div>
         </div>
 
         <ServerError error={error} />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Minus, Plus } from "lucide-react";
+import { ChevronDown, Loader2, Minus, Plus } from "lucide-react";
 import { useCreateRoom } from "../hooks/useCreateRoom";
 import { useUpdateRoom } from "../hooks/useUpdateRoom";
 import type { CreateRoomPayload, Room, UpdateRoomPayload } from "../types/room";
@@ -24,8 +24,21 @@ type FormState = {
   maxAdults: number;
   maxChildren: number;
   totalRooms: number;
+  /** Default rate per room per night; "" = not set. */
+  ratePrice: string;
+  rateCost: string;
+  rateCurrency: string;
   status: "active" | "inactive";
 };
+
+/** BTN first: hotels usually charge agencies in ngultrum. */
+const RATE_CURRENCIES = ["BTN", "USD", "INR", "EUR"];
+
+const isMoney = (v: string) =>
+  /^\d{1,8}(\.\d{1,2})?$/.test(v.trim().replace(/,/g, ""));
+/** "10200.00" → "10200", null → "" */
+const moneyText = (v: string | null | undefined) =>
+  v == null ? "" : String(Number(v));
 
 const empty: FormState = {
   name: "",
@@ -34,6 +47,9 @@ const empty: FormState = {
   maxAdults: 2,
   maxChildren: 0,
   totalRooms: 1,
+  ratePrice: "",
+  rateCost: "",
+  rateCurrency: "BTN",
   status: "active",
 };
 
@@ -45,6 +61,9 @@ function fromRoom(r: Room): FormState {
     maxAdults: r.maxAdults,
     maxChildren: r.maxChildren,
     totalRooms: r.totalRooms,
+    ratePrice: moneyText(r.ratePrice),
+    rateCost: moneyText(r.rateCost),
+    rateCurrency: r.rateCurrency ?? "BTN",
     status: r.status,
   };
 }
@@ -61,6 +80,10 @@ function validate(f: FormState): Errors {
     e.maxChildren = "Can't be negative.";
   if (!Number.isInteger(f.totalRooms) || f.totalRooms < 1)
     e.totalRooms = "At least 1 room.";
+  if (f.ratePrice.trim() && !isMoney(f.ratePrice))
+    e.ratePrice = "Enter an amount like 120 or 10200.";
+  if (f.rateCost.trim() && !isMoney(f.rateCost))
+    e.rateCost = "Enter an amount like 90 or 7500.";
   return e;
 }
 
@@ -197,6 +220,17 @@ export function RoomFormDialog({ open, onClose, hotelId, room }: Props) {
       maxAdults: form.maxAdults,
       maxChildren: form.maxChildren,
       totalRooms: form.totalRooms,
+      // Empty = no rate (null clears an existing one on edit).
+      ratePrice: form.ratePrice.trim()
+        ? form.ratePrice.trim().replace(/,/g, "")
+        : null,
+      rateCost: form.rateCost.trim()
+        ? form.rateCost.trim().replace(/,/g, "")
+        : null,
+      rateCurrency:
+        form.ratePrice.trim() || form.rateCost.trim()
+          ? form.rateCurrency
+          : null,
       status: form.status,
     };
 
@@ -359,6 +393,72 @@ export function RoomFormDialog({ open, onClose, hotelId, room }: Props) {
               ))}
             </div>
           </Field>
+
+          <div className="space-y-3 border-t border-line pt-5 sm:col-span-2">
+            <div>
+              <p className="text-sm font-semibold text-ink">
+                Rate per room per night
+              </p>
+              <p className="text-xs text-ink-soft">
+                Used to price this room automatically on bookings, converted
+                into each booking&apos;s currency. Optional, and agents can
+                still set a special price.
+              </p>
+            </div>
+            <div className="grid grid-cols-[6.5rem_1fr_1fr] gap-3">
+              <Field label="Currency">
+                <div className="relative">
+                  <select
+                    value={form.rateCurrency}
+                    onChange={(e) => setField("rateCurrency", e.target.value)}
+                    aria-label="Rate currency"
+                    className={`${inputCls} appearance-none pr-8`}
+                  >
+                    {[...new Set([form.rateCurrency, ...RATE_CURRENCIES])].map(
+                      (c) => (
+                        <option key={c}>{c}</option>
+                      ),
+                    )}
+                  </select>
+                  <ChevronDown
+                    size={14}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-soft"
+                  />
+                </div>
+              </Field>
+              <Field
+                label="Price"
+                error={errors.ratePrice}
+                hint="Customer pays"
+              >
+                <input
+                  inputMode="decimal"
+                  value={form.ratePrice}
+                  onChange={(e) => setField("ratePrice", e.target.value)}
+                  aria-invalid={!!errors.ratePrice}
+                  aria-label="Rate price per night"
+                  placeholder="Not set"
+                  className={`${inputCls} text-right font-semibold tabular-nums`}
+                />
+              </Field>
+              <Field
+                label="Cost"
+                error={errors.rateCost}
+                hint="You pay the hotel"
+              >
+                <input
+                  inputMode="decimal"
+                  value={form.rateCost}
+                  onChange={(e) => setField("rateCost", e.target.value)}
+                  aria-invalid={!!errors.rateCost}
+                  aria-label="Rate cost per night"
+                  placeholder="Not set"
+                  className={`${inputCls} text-right tabular-nums`}
+                />
+              </Field>
+            </div>
+          </div>
         </div>
 
         {error && (

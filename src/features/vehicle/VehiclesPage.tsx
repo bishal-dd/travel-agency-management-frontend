@@ -27,6 +27,69 @@ const PAGE_SIZE = 20;
  */
 const LOOKUP_LIMIT = 100;
 
+/** "Nu. 8,500" / "$45.50"; falls back to "8500 XYZ" for unknown codes. */
+function formatMoney(amount: string, currency: string) {
+  const n = Number(amount);
+  try {
+    return new Intl.NumberFormat("en", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: n % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(n);
+  } catch {
+    return `${n.toLocaleString("en")} ${currency}`;
+  }
+}
+
+/**
+ * Price per day (what the customer pays, with driver), and underneath what it
+ * costs you: the vehicle, plus the assigned driver's daily cost if set.
+ */
+function RateCell({ vehicle, driver }: { vehicle: Vehicle; driver?: Driver }) {
+  const currency = vehicle.rateCurrency ?? "BTN";
+  const driverCost = driver?.dailyCost
+    ? formatMoney(driver.dailyCost, driver.rateCurrency ?? "BTN")
+    : null;
+
+  if (!vehicle.dailyPrice && !vehicle.dailyCost) {
+    return (
+      <div className="text-sm text-ink-soft">
+        No rate
+        {driverCost && <p className="text-xs">driver {driverCost} / day</p>}
+      </div>
+    );
+  }
+  return (
+    <div className="whitespace-nowrap text-sm">
+      {vehicle.dailyPrice ? (
+        <p>
+          <span className="font-semibold tabular-nums text-ink">
+            {formatMoney(vehicle.dailyPrice, currency)}
+          </span>
+          <span className="text-ink-soft"> / day</span>
+        </p>
+      ) : (
+        <p className="text-ink-soft">No price</p>
+      )}
+      {(vehicle.dailyCost || driverCost) && (
+        <p className="text-xs text-ink-soft">
+          cost{" "}
+          {vehicle.dailyCost && (
+            <span className="tabular-nums">
+              {formatMoney(vehicle.dailyCost, currency)}
+            </span>
+          )}
+          {vehicle.dailyCost && driverCost && " + "}
+          {driverCost && (
+            <span className="tabular-nums">driver {driverCost}</span>
+          )}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Plate({ value }: { value: string }) {
   return (
     <span className="inline-block rounded-md border border-line bg-paper px-2 py-0.5 font-mono text-xs font-semibold tracking-wide text-ink">
@@ -189,6 +252,7 @@ export function VehiclesPage() {
                   <th className="px-5 py-3 font-semibold">Registration</th>
                   <th className="px-5 py-3 font-semibold">Seats</th>
                   <th className="px-5 py-3 font-semibold">Driver</th>
+                  <th className="px-5 py-3 font-semibold">Rate</th>
                   <th className="px-5 py-3 font-semibold">Status</th>
                   <th className="px-5 py-3">
                     <span className="sr-only">Actions</span>
@@ -238,6 +302,14 @@ export function VehiclesPage() {
                       />
                     </td>
                     <td className="px-5 py-4">
+                      <RateCell
+                        vehicle={v}
+                        driver={
+                          v.driverId ? driverById.get(v.driverId) : undefined
+                        }
+                      />
+                    </td>
+                    <td className="px-5 py-4">
                       <StatusBadge status={v.status} />
                     </td>
                     <td className="px-3 py-3">
@@ -267,7 +339,15 @@ export function VehiclesPage() {
                     </div>
                     <StatusBadge status={v.status} />
                   </div>
-                  <Plate value={v.registrationNumber} />
+                  <div className="flex items-start justify-between gap-3">
+                    <Plate value={v.registrationNumber} />
+                    <RateCell
+                      vehicle={v}
+                      driver={
+                        v.driverId ? driverById.get(v.driverId) : undefined
+                      }
+                    />
+                  </div>
                   <div className="flex items-end justify-between gap-3">
                     <DriverCell
                       driver={

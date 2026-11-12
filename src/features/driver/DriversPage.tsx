@@ -28,6 +28,35 @@ const PAGE_SIZE = 20;
  */
 const LOOKUP_LIMIT = 100;
 
+/** "Nu. 1,500" / "$45.50"; falls back to "1500 XYZ" for unknown codes. */
+function formatMoney(amount: string, currency: string) {
+  const n = Number(amount);
+  try {
+    return new Intl.NumberFormat("en", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: n % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(n);
+  } catch {
+    return `${n.toLocaleString("en")} ${currency}`;
+  }
+}
+
+/** What the agency pays the driver per day, or a quiet "Not set". */
+function DailyCost({ driver }: { driver: Driver }) {
+  if (!driver.dailyCost)
+    return <span className="text-sm text-ink-soft">Not set</span>;
+  return (
+    <span className="whitespace-nowrap text-sm">
+      <span className="font-semibold tabular-nums text-ink">
+        {formatMoney(driver.dailyCost, driver.rateCurrency ?? "BTN")}
+      </span>
+      <span className="text-ink-soft"> / day</span>
+    </span>
+  );
+}
+
 function Avatar({ name }: { name: string }) {
   const initials = name
     .split(/\s+/)
@@ -191,6 +220,7 @@ export function DriversPage() {
                   <th className="px-5 py-3 font-semibold">Contact</th>
                   <th className="px-5 py-3 font-semibold">CID / Licence</th>
                   <th className="px-5 py-3 font-semibold">Vehicle</th>
+                  <th className="px-5 py-3 font-semibold">Daily cost</th>
                   <th className="px-5 py-3 font-semibold">Status</th>
                   <th className="px-5 py-3">
                     <span className="sr-only">Actions</span>
@@ -245,6 +275,9 @@ export function DriversPage() {
                       />
                     </td>
                     <td className="px-5 py-4">
+                      <DailyCost driver={d} />
+                    </td>
+                    <td className="px-5 py-4">
                       <StatusBadge status={d.status} />
                     </td>
                     <td className="px-3 py-3">
@@ -282,6 +315,16 @@ export function DriversPage() {
                   </div>
                   <p className="font-mono text-xs text-ink-soft">
                     CID {d.cid} · Licence {d.licenseNumber}
+                  </p>
+                  <p className="text-xs text-ink-soft">
+                    Daily cost:{" "}
+                    {d.dailyCost ? (
+                      <span className="font-semibold tabular-nums text-ink">
+                        {formatMoney(d.dailyCost, d.rateCurrency ?? "BTN")}
+                      </span>
+                    ) : (
+                      "not set"
+                    )}
                   </p>
                   <div className="flex items-end justify-between gap-3">
                     <div className="min-w-0 flex-1">

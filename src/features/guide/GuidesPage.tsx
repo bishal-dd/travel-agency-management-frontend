@@ -20,6 +20,48 @@ import { GuideFormDialog } from "./ui/GuideFormDialog";
 
 const PAGE_SIZE = 20;
 
+/** "Nu. 3,500" / "$45.50"; falls back to "3500 XYZ" for unknown codes. */
+function formatMoney(amount: string, currency: string) {
+  const n = Number(amount);
+  try {
+    return new Intl.NumberFormat("en", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: n % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(n);
+  } catch {
+    return `${n.toLocaleString("en")} ${currency}`;
+  }
+}
+
+/** Price per day, with the cost underneath; a quiet "No rate" when neither is set. */
+function RateCell({ guide }: { guide: Guide }) {
+  const currency = guide.rateCurrency ?? "BTN";
+  if (!guide.dailyPrice && !guide.dailyCost) {
+    return <span className="text-sm text-ink-soft">No rate</span>;
+  }
+  return (
+    <div className="whitespace-nowrap text-sm">
+      {guide.dailyPrice ? (
+        <p>
+          <span className="font-semibold tabular-nums text-ink">
+            {formatMoney(guide.dailyPrice, currency)}
+          </span>
+          <span className="text-ink-soft"> / day</span>
+        </p>
+      ) : (
+        <p className="text-ink-soft">No price</p>
+      )}
+      {guide.dailyCost && (
+        <p className="text-xs tabular-nums text-ink-soft">
+          cost {formatMoney(guide.dailyCost, currency)}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Avatar({ name }: { name: string }) {
   const initials = name
     .split(/\s+/)
@@ -146,6 +188,7 @@ export function GuidesPage() {
                   <th className="px-5 py-3 font-semibold">Phone</th>
                   <th className="px-5 py-3 font-semibold">Email</th>
                   <th className="px-5 py-3 font-semibold">CID</th>
+                  <th className="px-5 py-3 font-semibold">Rate</th>
                   <th className="px-5 py-3 font-semibold">Status</th>
                   <th className="px-5 py-3">
                     <span className="sr-only">Actions</span>
@@ -198,6 +241,9 @@ export function GuidesPage() {
                       {g.cid}
                     </td>
                     <td className="px-5 py-4">
+                      <RateCell guide={g} />
+                    </td>
+                    <td className="px-5 py-4">
                       <StatusBadge status={g.status} />
                     </td>
                     <td className="px-3 py-3">
@@ -237,6 +283,7 @@ export function GuidesPage() {
                     <div className="min-w-0 space-y-0.5 text-sm text-ink-soft">
                       <p className="font-mono text-xs">CID {g.cid}</p>
                       {g.email && <p className="truncate">{g.email}</p>}
+                      <RateCell guide={g} />
                     </div>
                     <RowActions
                       label={g.name}

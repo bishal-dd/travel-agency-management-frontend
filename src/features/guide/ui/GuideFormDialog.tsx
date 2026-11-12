@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { ChevronDown, Plus, X } from "lucide-react";
 import {
   ChipPicker,
   Field,
@@ -49,8 +49,21 @@ type FormState = {
   experienceYears: string; // kept as text so the field can be empty
   specialization: string;
   bio: string;
+  /** Default rate per day; "" = not set. */
+  dailyPrice: string;
+  dailyCost: string;
+  rateCurrency: string;
   status: Status;
 };
+
+/** BTN first: guides are usually paid in ngultrum. */
+const RATE_CURRENCIES = ["BTN", "USD", "INR", "EUR"];
+
+const isMoney = (v: string) =>
+  /^\d{1,8}(\.\d{1,2})?$/.test(v.trim().replace(/,/g, ""));
+/** "3500.00" → "3500", null → "" */
+const moneyText = (v: string | null | undefined) =>
+  v == null ? "" : String(Number(v));
 
 const empty: FormState = {
   name: "",
@@ -62,6 +75,9 @@ const empty: FormState = {
   experienceYears: "",
   specialization: "",
   bio: "",
+  dailyPrice: "",
+  dailyCost: "",
+  rateCurrency: "BTN",
   status: "active",
 };
 
@@ -76,6 +92,9 @@ function fromGuide(g: Guide): FormState {
     experienceYears: g.experienceYears == null ? "" : String(g.experienceYears),
     specialization: g.specialization ?? "",
     bio: g.bio ?? "",
+    dailyPrice: moneyText(g.dailyPrice),
+    dailyCost: moneyText(g.dailyCost),
+    rateCurrency: g.rateCurrency ?? "BTN",
     status: g.status,
   };
 }
@@ -97,11 +116,17 @@ function validate(f: FormState): Errors {
     if (!Number.isInteger(n) || n < 0 || n > 60)
       e.experienceYears = "Enter whole years, 0–60.";
   }
+  if ((f.dailyPrice ?? "").trim() && !isMoney(f.dailyPrice))
+    e.dailyPrice = "Enter an amount like 3500 or 45.50.";
+  if ((f.dailyCost ?? "").trim() && !isMoney(f.dailyCost))
+    e.dailyCost = "Enter an amount like 2500 or 45.50.";
   return e;
 }
 
 function toInput(f: FormState): CreateGuideInput {
   const opt = (v: string) => v.trim() || undefined;
+  const price = (f.dailyPrice ?? "").trim().replace(/,/g, "");
+  const cost = (f.dailyCost ?? "").trim().replace(/,/g, "");
   return {
     name: f.name.trim(),
     cid: f.cid.trim(),
@@ -114,6 +139,10 @@ function toInput(f: FormState): CreateGuideInput {
       : undefined,
     specialization: opt(f.specialization),
     bio: opt(f.bio),
+    // Empty = no rate (null clears an existing one on edit).
+    dailyPrice: price || null,
+    dailyCost: cost || null,
+    rateCurrency: price || cost ? f.rateCurrency || "BTN" : null,
     status: f.status,
   };
 }
@@ -257,7 +286,8 @@ export function GuideFormDialog({ open, onClose, guide }: Props) {
   }, [open, guide]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((f) => ({ ...f, [key]: value }));
+    // Merge over `empty` so every field always exists (e.g. after a hot reload).
+    setForm((f) => ({ ...empty, ...f, [key]: value }));
     if (errors[key]) setErrors((x) => ({ ...x, [key]: undefined }));
   }
 
@@ -425,6 +455,76 @@ export function GuideFormDialog({ open, onClose, guide }: Props) {
               className={`${inputCls} mt-2`}
             />
           </Field>
+
+          <SectionLabel>Rate per day</SectionLabel>
+
+          <div className="space-y-3 sm:col-span-2">
+            <p className="text-xs text-ink-soft">
+              Used to price this guide automatically on bookings, converted into
+              each booking&apos;s currency. Optional, and agents can still set a
+              special price.
+            </p>
+            <div className="grid grid-cols-[6.5rem_1fr_1fr] gap-3">
+              <Field label="Currency" htmlFor="g-rate-currency">
+                <div className="relative">
+                  <select
+                    id="g-rate-currency"
+                    value={form.rateCurrency || "BTN"}
+                    onChange={(e) => setField("rateCurrency", e.target.value)}
+                    className={`${inputCls} appearance-none pr-8`}
+                  >
+                    {[
+                      ...new Set([
+                        form.rateCurrency || "BTN",
+                        ...RATE_CURRENCIES,
+                      ]),
+                    ].map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={14}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-soft"
+                  />
+                </div>
+              </Field>
+              <Field
+                label="Price"
+                htmlFor="g-rate-price"
+                error={errors.dailyPrice}
+                hint="Customer pays"
+              >
+                <input
+                  id="g-rate-price"
+                  inputMode="decimal"
+                  value={form.dailyPrice ?? ""}
+                  onChange={text("dailyPrice")}
+                  aria-invalid={!!errors.dailyPrice}
+                  placeholder="Not set"
+                  className={`${inputCls} text-right font-semibold tabular-nums`}
+                />
+              </Field>
+              <Field
+                label="Cost"
+                htmlFor="g-rate-cost"
+                error={errors.dailyCost}
+                hint="You pay the guide"
+              >
+                <input
+                  id="g-rate-cost"
+                  inputMode="decimal"
+                  value={form.dailyCost ?? ""}
+                  onChange={text("dailyCost")}
+                  aria-invalid={!!errors.dailyCost}
+                  placeholder="Not set"
+                  className={`${inputCls} text-right tabular-nums`}
+                />
+              </Field>
+            </div>
+          </div>
 
           <Field label="Status" className="sm:col-span-2">
             <StatusToggle

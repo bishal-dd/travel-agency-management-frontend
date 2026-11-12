@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
   BedDouble,
   Bus,
   ChevronDown,
   Compass,
   History,
   Package,
+  Sparkles,
   Ticket,
 } from "lucide-react";
 import { Modal } from "../../hotel/ui/Modal";
@@ -23,12 +25,14 @@ import {
   useCreateBookingItem,
   useUpdateBookingItem,
 } from "../hooks/useBookingItemMutations";
+import { useDefaultPrice } from "../hooks/useDefaultPrice";
 import { useLastPrice } from "../hooks/useLastPrice";
 import type {
   BookingDetail,
   BookingItem,
   BookingItemInput,
   BookingItemType,
+  DefaultPriceParams,
   LastPriceParams,
 } from "../types/booking";
 import { addDays, formatDate, tripLength } from "./bookingUi";
@@ -173,12 +177,16 @@ export function BookingItemDialog({
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
   // Once the agent types a price, never overwrite it with a suggestion.
   const [priceTouched, setPriceTouched] = useState(false);
+  // true = the agent sets the price; false = use the rate (when there is one).
+  const [override, setOverride] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setForm(item ? formFromItem(item) : emptyForm(initialType, booking));
     setErrors({});
     setPriceTouched(isEdit);
+    // Editing keeps the item's saved price unless "Use current rate" is clicked.
+    setOverride(isEdit);
     create.reset();
     update.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -199,6 +207,37 @@ export function BookingItemDialog({
 
   const service = services.find((s) => s.id === form.serviceId);
   const vehicle = vehicles.find((v) => v.id === form.vehicleId);
+
+  // ----- price from the rate (room / vehicle + driver / guide / service), converted by the server -----
+  const defaultParams = useMemo<DefaultPriceParams | null>(() => {
+    const bookingId = booking.id;
+    if (form.type === "hotel" && form.hotelRoomId)
+      return { bookingId, hotelRoomId: form.hotelRoomId };
+    if (form.type === "vehicle" && form.vehicleId) {
+      return form.driverId
+        ? { bookingId, vehicleId: form.vehicleId, driverId: form.driverId }
+        : { bookingId, vehicleId: form.vehicleId };
+    }
+    if (form.type === "guide" && form.guideId)
+      return { bookingId, guideId: form.guideId };
+    if (form.type === "service" && form.serviceId)
+      return { bookingId, serviceId: form.serviceId };
+    return null;
+  }, [
+    form.type,
+    form.hotelRoomId,
+    form.vehicleId,
+    form.driverId,
+    form.guideId,
+    form.serviceId,
+    booking.id,
+  ]);
+
+  const { data: auto, isFetching: autoLoading } =
+    useDefaultPrice(defaultParams);
+  const autoAvailable = !!defaultParams && !!auto?.unitPrice;
+  /** Price comes from the rate: the server works it out, the form just shows it. */
+  const useAuto = autoAvailable && !override;
 
   // ----- last price used -----
   const lastPriceParams = useMemo<LastPriceParams | null>(() => {
@@ -228,7 +267,7 @@ export function BookingItemDialog({
 
   // Fill the price from the last booking, or from the service's own price if it's in this currency.
   useEffect(() => {
-    if (priceTouched) return;
+    if (priceTouched || autoAvailable) return;
     if (lastPrice) {
       setForm((f) => ({
         ...f,
@@ -245,7 +284,14 @@ export function BookingItemDialog({
     ) {
       setForm((f) => ({ ...f, unitPrice: String(Number(service.price)) }));
     }
-  }, [lastPrice, service, form.type, booking.currency, priceTouched]);
+  }, [
+    lastPrice,
+    service,
+    form.type,
+    booking.currency,
+    priceTouched,
+    autoAvailable,
+  ]);
 
   // ----- derived numbers -----
   const span =
@@ -265,12 +311,18 @@ export function BookingItemDialog({
         ? "day"
         : "unit";
   const qty = Number(form.quantity) || 0;
-  const price = isMoney(form.unitPrice)
-    ? Number(form.unitPrice.replace(/,/g, ""))
-    : 0;
-  const cost = isMoney(form.unitCost)
-    ? Number(form.unitCost.replace(/,/g, ""))
-    : null;
+  const price = useAuto
+    ? Number(auto!.unitPrice)
+    : isMoney(form.unitPrice)
+      ? Number(form.unitPrice.replace(/,/g, ""))
+      : 0;
+  const cost = useAuto
+    ? auto!.unitCost == null
+      ? null
+      : Number(auto!.unitCost)
+    : isMoney(form.unitCost)
+      ? Number(form.unitCost.replace(/,/g, ""))
+      : null;
   // Rounded to cents only for display; the server computes the real totals exactly.
   const lineTotal = Math.round(qty * units * price * 100) / 100;
   const lineCost =
@@ -311,20 +363,25 @@ export function BookingItemDialog({
     }
 
     if (!Number.isInteger(qty) || qty < 1) e.quantity = "At least 1.";
-    if (!isMoney(form.unitPrice))
-      e.unitPrice = "Enter a price like 120 or 45.50.";
-    if (form.unitCost.trim() && !isMoney(form.unitCost))
-      e.unitCost = "Enter a cost like 90 or 35.50.";
+    if (!useAuto) {
+      if (!isMoney(form.unitPrice))
+        e.unitPrice = "Enter a price like 120 or 45.50.";
+      if (form.unitCost.trim() && !isMoney(form.unitCost))
+        e.unitCost = "Enter a cost like 90 or 35.50.";
+    }
     return e;
   }
 
   function toInput(): BookingItemInput {
     const money = {
       quantity: qty,
-      unitPrice: form.unitPrice.trim().replace(/,/g, ""),
-      unitCost: form.unitCost.trim()
-        ? form.unitCost.trim().replace(/,/g, "")
-        : null,
+      // Using the rate: leave price and cost out and let the server price it.
+      unitPrice: useAuto ? undefined : form.unitPrice.trim().replace(/,/g, ""),
+      unitCost: useAuto
+        ? undefined
+        : form.unitCost.trim()
+          ? form.unitCost.trim().replace(/,/g, "")
+          : null,
       // Empty = let the server name it from the linked record.
       description: form.description.trim() || undefined,
       notes: form.notes.trim() || null,
@@ -713,6 +770,101 @@ export function BookingItemDialog({
           )}
 
           {/* ----- price ----- */}
+          {defaultParams && auto?.missingExchangeRate && (
+            <p className="flex items-start gap-2 rounded-xl bg-marigold/15 px-4 py-3 text-sm text-ink sm:col-span-2">
+              <AlertTriangle
+                size={16}
+                className="mt-0.5 shrink-0 text-marigold"
+                aria-hidden="true"
+              />
+              This rate is in {auto.source.currency}, but there&apos;s no
+              exchange rate for {auto.missingExchangeRate} yet. Add it in
+              Settings → Exchange rates, or enter the price below.
+            </p>
+          )}
+
+          {useAuto && (
+            <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-lagoon-deep/30 bg-lagoon-tint px-4 py-3 sm:col-span-2">
+              <div className="min-w-0 text-sm">
+                <p className="flex items-center gap-1.5 font-semibold text-lagoon-deep">
+                  <Sparkles size={14} aria-hidden="true" />
+                  {formatPrice(auto!.unitPrice!, booking.currency)} / {per}
+                  {auto!.unitCost != null && (
+                    <span className="font-normal text-ink-soft">
+                      · cost {formatPrice(auto!.unitCost, booking.currency)}
+                    </span>
+                  )}
+                </p>
+                <p className="mt-0.5 text-xs text-ink-soft">
+                  From {auto!.source.label}
+                  {auto!.source.currency !== booking.currency &&
+                    auto!.source.unitPrice &&
+                    auto!.source.fxRate && (
+                      <>
+                        {" "}
+                        (
+                        {formatPrice(
+                          auto!.source.unitPrice,
+                          auto!.source.currency,
+                        )}{" "}
+                        at 1 {booking.currency} ={" "}
+                        {(1 / Number(auto!.source.fxRate)).toFixed(2)}{" "}
+                        {auto!.source.currency})
+                      </>
+                    )}
+                </p>
+                {auto!.extraCost && (
+                  <p className="mt-0.5 text-xs text-ink-soft">
+                    Cost includes {auto!.extraCost.label}:{" "}
+                    {formatPrice(auto!.extraCost.converted, booking.currency)}
+                    {auto!.extraCost.currency !== booking.currency && (
+                      <>
+                        {" "}
+                        (
+                        {formatPrice(
+                          auto!.extraCost.amount,
+                          auto!.extraCost.currency,
+                        )}
+                        )
+                      </>
+                    )}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setOverride(true);
+                  setPriceTouched(true);
+                  set("unitPrice", String(Number(auto!.unitPrice)));
+                  set(
+                    "unitCost",
+                    auto!.unitCost == null
+                      ? ""
+                      : String(Number(auto!.unitCost)),
+                  );
+                }}
+                className="text-sm font-semibold text-lagoon-deep hover:underline"
+              >
+                Set a special price
+              </button>
+            </div>
+          )}
+
+          {isEdit && override && autoAvailable && (
+            <p className="-mb-2 text-xs text-ink-soft sm:col-span-2">
+              The rate now gives{" "}
+              {formatPrice(auto!.unitPrice!, booking.currency)} / {per}.{" "}
+              <button
+                type="button"
+                onClick={() => setOverride(false)}
+                className="font-semibold text-lagoon-deep hover:underline"
+              >
+                Use current rate
+              </button>
+            </p>
+          )}
+
           <div className="grid grid-cols-3 gap-3 border-t border-line pt-5 sm:col-span-2">
             <Field
               label={
@@ -737,46 +889,57 @@ export function BookingItemDialog({
                 className={inputCls}
               />
             </Field>
-            <Field
-              label={`Price / ${per}`}
-              htmlFor="bi-price"
-              required
-              error={errors.unitPrice}
-            >
-              <input
-                id="bi-price"
-                inputMode="decimal"
-                value={form.unitPrice}
-                onChange={(e) => {
-                  setPriceTouched(true);
-                  set("unitPrice", e.target.value);
-                }}
-                aria-invalid={!!errors.unitPrice}
-                placeholder="0"
-                className={`${inputCls} text-right font-semibold tabular-nums`}
-              />
-            </Field>
-            <Field
-              label={`Cost / ${per}`}
-              htmlFor="bi-cost"
-              error={errors.unitCost}
-              hint="What you pay"
-            >
-              <input
-                id="bi-cost"
-                inputMode="decimal"
-                value={form.unitCost}
-                onChange={(e) => {
-                  setPriceTouched(true);
-                  set("unitCost", e.target.value);
-                }}
-                placeholder="Optional"
-                className={`${inputCls} text-right tabular-nums`}
-              />
-            </Field>
+            {!useAuto && (
+              <>
+                <Field
+                  label={`Price / ${per}`}
+                  htmlFor="bi-price"
+                  required
+                  error={errors.unitPrice}
+                >
+                  <input
+                    id="bi-price"
+                    inputMode="decimal"
+                    value={form.unitPrice}
+                    onChange={(e) => {
+                      setPriceTouched(true);
+                      set("unitPrice", e.target.value);
+                    }}
+                    aria-invalid={!!errors.unitPrice}
+                    placeholder="0"
+                    className={`${inputCls} text-right font-semibold tabular-nums`}
+                  />
+                </Field>
+                <Field
+                  label={`Cost / ${per}`}
+                  htmlFor="bi-cost"
+                  error={errors.unitCost}
+                  hint="What you pay"
+                >
+                  <input
+                    id="bi-cost"
+                    inputMode="decimal"
+                    value={form.unitCost}
+                    onChange={(e) => {
+                      setPriceTouched(true);
+                      set("unitCost", e.target.value);
+                    }}
+                    placeholder="Optional"
+                    className={`${inputCls} text-right tabular-nums`}
+                  />
+                </Field>
+              </>
+            )}
+            {useAuto && (
+              <p className="col-span-2 self-end pb-2.5 text-xs text-ink-soft">
+                {autoLoading
+                  ? "Updating price…"
+                  : "Price and cost come from the rate."}
+              </p>
+            )}
           </div>
 
-          {lastPrice && (
+          {lastPrice && !useAuto && (
             <p className="-mt-2 flex items-center gap-1.5 text-xs text-ink-soft sm:col-span-2">
               <History size={13} aria-hidden="true" />
               Last used {formatPrice(lastPrice.unitPrice, booking.currency)}

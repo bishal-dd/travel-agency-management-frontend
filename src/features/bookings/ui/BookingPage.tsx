@@ -18,6 +18,7 @@ import {
   Pencil,
   Phone,
   Plus,
+  RefreshCw,
   Route,
   Star,
   Trash2,
@@ -29,15 +30,20 @@ import {
 
 import { ConfirmDeleteDialog } from "../../shared/components/ConfirmDeleteDialog";
 import { inputCls } from "../../shared/components/FormBits";
+import { useHotels } from "../../hotel/hooks/useHotels";
+
 import { useBookingById } from "../hooks/useBookingById";
+import { useDayPlanPrices } from "../hooks/useDayPlanPrices";
 import { useChangeBookingStatus } from "../hooks/useChangeBookingStatus";
 import { useDeleteBooking } from "../hooks/useDeleteBooking";
 import { useSaveBookingDays } from "../hooks/useSaveBookingDays";
 import { useSaveBookingTravellers } from "../hooks/useSaveBookingTravellers";
 import type { BookingDetail, BookingStatus } from "../types/booking";
 import {
+  type BookingDraftDay,
   type DraftTraveller,
   daysFrom,
+  daysProblem,
   daysToInput,
   newTraveller,
   sameDays,
@@ -58,9 +64,24 @@ import {
 } from "./bookingUi";
 import { EditBookingDialog } from "./EditBookingDialog";
 import { PricingSection } from "./PricingSection";
+import { DayPlan, type PlanPickers } from "./DayPlan";
+import {
+  type LinePrice,
+  type LineTotals,
+  carryOverLines,
+  sumLines,
+} from "./dayPlanState";
+import { useDrivers } from "../../driver/hooks/useDrivers";
+import { useGuides } from "../../guide/hooks/useGuides";
 import { MEALS } from "../../itineraries/constants/itinerary";
 import { DayFormDialog } from "../../itineraries/ui/DayFormDialog";
-import { DraftDay, newDay } from "../../itineraries/utils/editorState";
+import { newDay, DraftDay } from "../../itineraries/utils/editorState";
+import { QuotesPanel } from "../../quotes/ui/QuotesPanel";
+import { useServices } from "../../service/hooks/useServices";
+import { useVehicles } from "../../vehicle/hooks/useVehicles";
+
+/** Records for the day pickers, loaded once. Keep ≤ your backend's max `limit`. */
+const PICKER_LIMIT = 100;
 
 const backLink = (
   <Link
@@ -336,8 +357,13 @@ function DayCard({
   onEdit,
   onMove,
   onDelete,
+  onLinesChange,
+  prices,
+  totals,
+  currency,
+  pickers,
 }: {
-  day: DraftDay;
+  day: BookingDraftDay;
   number: number;
   date: string;
   isFirst: boolean;
@@ -346,6 +372,11 @@ function DayCard({
   onEdit: () => void;
   onMove: (dir: -1 | 1) => void;
   onDelete: () => void;
+  onLinesChange: (lines: BookingDraftDay["lines"]) => void;
+  prices: Map<string, LinePrice>;
+  totals: LineTotals;
+  currency: string;
+  pickers: PlanPickers;
 }) {
   const meals = MEALS.filter((m) => day.meals.includes(m.value)).map(
     (m) => m.label,
@@ -439,6 +470,16 @@ function DayCard({
           </div>
         )}
       </div>
+
+      <DayPlan
+        lines={day.lines}
+        onChange={onLinesChange}
+        prices={prices}
+        totals={totals}
+        currency={currency}
+        readOnly={readOnly}
+        pickers={pickers}
+      />
     </li>
   );
 }
@@ -454,9 +495,9 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
   const [travellers, setTravellers] = useState<DraftTraveller[]>(() =>
     travellersFrom(booking),
   );
-  const [days, setDays] = useState<DraftDay[]>(() => daysFrom(booking));
+  const [days, setDays] = useState<BookingDraftDay[]>(() => daysFrom(booking));
   const [editingDay, setEditingDay] = useState<{
-    day: DraftDay;
+    day: BookingDraftDay;
     index: number;
   } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -469,6 +510,27 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
   const travellersDirty = !sameTravellers(travellers, travellersFrom(booking));
   const daysDirty = !sameDays(days, daysFrom(booking));
   const dirty = travellersDirty || daysDirty;
+
+  // ----- day plans: pickers, live prices, totals -----
+  const { hotels } = useHotels({ status: "active", limit: PICKER_LIMIT });
+  const { vehicles } = useVehicles({ status: "active", limit: PICKER_LIMIT });
+  const { drivers } = useDrivers({ status: "active", limit: PICKER_LIMIT });
+  const { guides } = useGuides({ status: "active", limit: PICKER_LIMIT });
+  const { services } = useServices({ status: "active", limit: PICKER_LIMIT });
+  const pickers: PlanPickers = { hotels, vehicles, drivers, guides, services };
+
+  const prices = useDayPlanPrices(booking.id, days);
+  const dayTotals = days.map((d) => sumLines(d.lines, prices));
+  const hasLines = days.some((d) => d.lines.length > 0);
+
+  const setDayLines = (key: string, lines: BookingDraftDay["lines"]) =>
+    setDays((ds) => ds.map((d) => (d.key === key ? { ...d, lines } : d)));
+
+  /** A new day starts with the last day's vehicle, driver and guide. */
+  const blankDay = (): BookingDraftDay => ({
+    ...newDay(),
+    lines: carryOverLines(days[days.length - 1]?.lines),
+  });
 
   // When the server copy changes and nothing is being edited, follow it.
   useEffect(() => {
@@ -497,12 +559,18 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
     });
   }
 
-  function saveDayFromDialog(day: DraftDay) {
+  function saveDayFromDialog(edited: DraftDay) {
     setDays((ds) => {
-      const i = ds.findIndex((d) => d.key === day.key);
-      return i === -1
-        ? [...ds, day]
-        : ds.map((d) => (d.key === day.key ? day : d));
+      const existing = ds.find((d) => d.key === edited.key);
+      // The dialog edits the day's details; its lines are edited on the card.
+      const day: BookingDraftDay = {
+        ...edited,
+        lines:
+          existing?.lines ?? (edited as Partial<BookingDraftDay>).lines ?? [],
+      };
+      return existing
+        ? ds.map((d) => (d.key === day.key ? day : d))
+        : [...ds, day];
     });
     setEditingDay(null);
   }
@@ -517,6 +585,18 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
     const unnamed = travellers.findIndex((t) => !t.name.trim());
     if (unnamed !== -1) {
       setSaveError(`Traveller ${unnamed + 1} needs a name.`);
+      return;
+    }
+    const dayProblem = daysProblem(days);
+    if (dayProblem) {
+      setSaveError(dayProblem);
+      return;
+    }
+    const unpriced = dayTotals.findIndex((t) => t.needsPrice > 0);
+    if (unpriced !== -1) {
+      setSaveError(
+        `Day ${unpriced + 1}: something has no rate. Set a price for it, or add the rate first.`,
+      );
       return;
     }
     setSaving(true);
@@ -555,6 +635,15 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
   const nextDate = addDays(booking.startDate, days.length);
   const canDelete = booking.status === "inquiry" || booking.status === "quoted";
   const travellerGap = booking.adults + booking.children - travellers.length;
+
+  /** Re-price every line from today's rates (special prices stay). */
+  function refreshRates() {
+    setSaveError(null);
+    saveDays.mutate(
+      { bookingId: booking.id, days: daysToInput(days), refreshRates: true },
+      { onSuccess: (res) => setDays(daysFrom(res.data)) },
+    );
+  }
 
   return (
     <div className={dirty ? "pb-24" : ""}>
@@ -641,17 +730,48 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
               Itinerary
             </h2>
             {!readOnly && days.length > 0 && (
-              <button
-                type="button"
-                onClick={() =>
-                  setEditingDay({ day: newDay(), index: days.length })
-                }
-                className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-ink ring-1 ring-inset ring-line hover:ring-ink/40"
-              >
-                <Plus size={15} /> Add day
-              </button>
+              <div className="flex flex-wrap gap-2">
+                {hasLines && (
+                  <button
+                    type="button"
+                    onClick={refreshRates}
+                    disabled={dirty || saveDays.isPending}
+                    title={
+                      dirty
+                        ? "Save your changes first"
+                        : "Re-price every line from today's rates. Special prices stay."
+                    }
+                    className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-ink-soft ring-1 ring-inset ring-line hover:text-ink hover:ring-ink/40 disabled:opacity-50"
+                  >
+                    {saveDays.isPending && !saving ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <RefreshCw size={14} />
+                    )}
+                    Current rates
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEditingDay({ day: blankDay(), index: days.length })
+                  }
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-ink ring-1 ring-inset ring-line hover:ring-ink/40"
+                >
+                  <Plus size={15} /> Add day
+                </button>
+              </div>
             )}
           </div>
+
+          {saveDays.error && !dirty && (
+            <p
+              role="alert"
+              className="mb-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700"
+            >
+              {saveDays.error.message}
+            </p>
+          )}
 
           {days.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-14 text-center">
@@ -663,7 +783,7 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
               {!readOnly && (
                 <button
                   type="button"
-                  onClick={() => setEditingDay({ day: newDay(), index: 0 })}
+                  onClick={() => setEditingDay({ day: blankDay(), index: 0 })}
                   className="mt-5 inline-flex h-10 items-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-white hover:bg-lagoon-deep"
                 >
                   <Plus size={16} /> Add day 1
@@ -687,6 +807,11 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
                     onDelete={() =>
                       setDays((ds) => ds.filter((x) => x.key !== d.key))
                     }
+                    onLinesChange={(lines) => setDayLines(d.key, lines)}
+                    prices={prices}
+                    totals={dayTotals[i]!}
+                    currency={booking.currency}
+                    pickers={pickers}
                   />
                 ))}
               </ol>
@@ -694,7 +819,7 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
                 <button
                   type="button"
                   onClick={() =>
-                    setEditingDay({ day: newDay(), index: days.length })
+                    setEditingDay({ day: blankDay(), index: days.length })
                   }
                   className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-sm font-semibold text-ink-soft transition-colors hover:border-lagoon-deep hover:bg-lagoon-tint hover:text-lagoon-deep"
                 >
@@ -712,8 +837,10 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
           )}
         </section>
 
-        {/* Side column: customer + travellers */}
+        {/* Side column: quotes, customer, travellers */}
         <div className="space-y-6">
+          <QuotesPanel booking={booking} unsavedChanges={dirty} />
+
           <section
             aria-labelledby="customer-heading"
             className="rounded-2xl border border-line bg-white p-5"
@@ -837,8 +964,14 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
         </div>
       </div>
 
-      {/* Items and prices. Each change saves straight away (not part of the Save bar). */}
-      <PricingSection booking={booking} readOnly={readOnly} />
+      {/* Trip totals, from the day plans above (including unsaved changes). */}
+      <PricingSection
+        booking={booking}
+        days={days}
+        dayTotals={dayTotals}
+        dirty={daysDirty}
+        travellersDirty={travellersDirty}
+      />
 
       <DayFormDialog
         open={!!editingDay}

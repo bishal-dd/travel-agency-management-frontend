@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ArrowLeftRight,
   Bus,
   CalendarCheck,
   Compass,
@@ -11,6 +12,7 @@ import {
   FileText,
   Hotel,
   IdCard,
+  Landmark,
   LayoutDashboard,
   LogOut,
   Package,
@@ -67,6 +69,21 @@ const nav: NavItem[] = [
   { label: "Team", href: "/dashboard/team", icon: Users },
 ];
 
+// Agency-wide settings, shown in their own group under the main nav.
+const settingsNav: NavItem[] = [
+  {
+    label: "Taxes & fees",
+    href: "/dashboard/settings/pricing",
+    icon: Landmark,
+  },
+  {
+    label: "Exchange rates",
+    href: "/dashboard/settings/exchange-rates",
+    icon: ArrowLeftRight,
+  },
+  { label: "Quotes", href: "/dashboard/settings/quotes", icon: FileText },
+];
+
 function isActive(pathname: string, href: string) {
   if (href === "/dashboard") return pathname === "/dashboard";
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -75,11 +92,17 @@ function isActive(pathname: string, href: string) {
 const itemBase =
   "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150";
 
-/** The nav list itself. `pathname` is null in the prerendered fallback (no link highlighted yet). */
-function NavList({ pathname }: { pathname: string | null }) {
+/** One group of links. `pathname` is null in the prerendered fallback (no link highlighted yet). */
+function NavItems({
+  items,
+  pathname,
+}: {
+  items: NavItem[];
+  pathname: string | null;
+}) {
   return (
     <ul className="space-y-0.5">
-      {nav.map((item) => {
+      {items.map((item) => {
         if (item.soon) {
           return (
             <li
@@ -118,11 +141,41 @@ function NavList({ pathname }: { pathname: string | null }) {
   );
 }
 
-function ActiveNavList() {
-  return <NavList pathname={usePathname()} />;
+/** Main nav, then the Settings group (only for people who can manage settings). */
+function NavList({
+  pathname,
+  showSettings,
+}: {
+  pathname: string | null;
+  showSettings: boolean;
+}) {
+  return (
+    <>
+      <NavItems items={nav} pathname={pathname} />
+      {showSettings && (
+        <div className="mt-6">
+          <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wide text-ink-soft/80">
+            Settings
+          </p>
+          <NavItems items={settingsNav} pathname={pathname} />
+        </div>
+      )}
+    </>
+  );
 }
 
-export function DashboardSidebar({ d }: { d: AgencyDashboard }) {
+function ActiveNavList({ showSettings }: { showSettings: boolean }) {
+  return <NavList pathname={usePathname()} showSettings={showSettings} />;
+}
+
+export function DashboardSidebar({
+  d,
+  showSettings = true,
+}: {
+  d: AgencyDashboard;
+  /** Pass false for staff and accountants (their settings requests get a 403 anyway). */
+  showSettings?: boolean;
+}) {
   const user = d.session?.user;
   const initial = (user?.name || user?.email || "U").charAt(0).toUpperCase();
 
@@ -134,8 +187,10 @@ export function DashboardSidebar({ d }: { d: AgencyDashboard }) {
 
       <nav aria-label="Dashboard" className="-mx-2 flex-1 overflow-y-auto px-2">
         {/* usePathname() must sit inside <Suspense> on dynamic routes */}
-        <Suspense fallback={<NavList pathname={null} />}>
-          <ActiveNavList />
+        <Suspense
+          fallback={<NavList pathname={null} showSettings={showSettings} />}
+        >
+          <ActiveNavList showSettings={showSettings} />
         </Suspense>
       </nav>
 
