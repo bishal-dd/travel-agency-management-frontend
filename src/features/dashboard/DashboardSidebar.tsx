@@ -54,12 +54,7 @@ const nav: NavItem[] = [
   },
   { label: "Packages", href: "/dashboard/packages", icon: Package, soon: true },
   { label: "Trips", href: "/dashboard/trips", icon: Plane },
-  {
-    label: "Payments",
-    href: "/dashboard/payments",
-    icon: CreditCard,
-    soon: true,
-  },
+  { label: "Payments", href: "/dashboard/payments", icon: CreditCard },
   {
     label: "Documents",
     href: "/dashboard/documents",
@@ -82,6 +77,11 @@ const settingsNav: NavItem[] = [
     icon: ArrowLeftRight,
   },
   { label: "Quotes", href: "/dashboard/settings/quotes", icon: FileText },
+  {
+    label: "Payment terms",
+    href: "/dashboard/settings/payments",
+    icon: CreditCard,
+  },
 ];
 
 function isActive(pathname: string, href: string) {
