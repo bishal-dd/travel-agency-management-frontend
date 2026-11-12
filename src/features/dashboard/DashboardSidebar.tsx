@@ -53,7 +53,7 @@ const nav: NavItem[] = [
     icon: CalendarCheck,
   },
   { label: "Packages", href: "/dashboard/packages", icon: Package, soon: true },
-  { label: "Trips", href: "/dashboard/trips", icon: Plane },
+  { label: "Trips", href: "/dashboard/trips", icon: Plane, soon: true },
   { label: "Payments", href: "/dashboard/payments", icon: CreditCard },
   {
     label: "Documents",

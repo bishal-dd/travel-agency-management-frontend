@@ -1,10 +1,12 @@
 "use client";
 
-import { InviteForm } from "./InviteForm";
-import { InvitationList } from "./InvitationList";
 import { ErrorText } from "./parts";
 import { useDashboardContext } from "./DashboardContext";
 
+/**
+ * Agency overview. Team invitations moved to the Team page; this becomes the
+ * daily dashboard (action needed, upcoming trips, this month, activity).
+ */
 export function Dashboard() {
   const d = useDashboardContext();
   const user = d.session?.user;
@@ -21,23 +23,15 @@ export function Dashboard() {
           <h1 className="mt-2 font-display text-3xl font-medium sm:text-4xl">
             Welcome, {user.name}
           </h1>
-          <p className="mt-2 text-ink-soft">
-            Manage your agency team and invitations.
-          </p>
+          {d.activeOrganization && (
+            <p className="mt-2 text-ink-soft">{d.activeOrganization.name}</p>
+          )}
         </div>
       </div>
 
       {d.switchError && (
         <div className="mt-6 rounded-2xl bg-white p-4 ring-1 ring-red-200">
           <ErrorText>{d.switchError}</ErrorText>
-        </div>
-      )}
-
-      {d.activeOrganization && (
-        <div className="mt-8 grid items-start gap-5 xl:grid-cols-2">
-          <InviteForm agencyName={d.activeOrganization.name} {...d} />
-
-          <InvitationList agencyName={d.activeOrganization.name} {...d} />
         </div>
       )}
     </section>
