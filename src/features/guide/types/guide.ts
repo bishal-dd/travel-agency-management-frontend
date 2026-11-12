@@ -10,6 +10,12 @@ export interface Guide {
   experienceYears: number | null;
   specialization: string | null;
   bio: string | null;
+  /** Per day, what the customer pays for the guide. "3500.00" or null. */
+  dailyPrice: string | null;
+  /** Per day, what the agency pays the guide. */
+  dailyCost: string | null;
+  /** Currency of the rate, e.g. "BTN". */
+  rateCurrency: string | null;
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
@@ -25,6 +31,10 @@ export interface CreateGuideInput {
   experienceYears?: number;
   specialization?: string;
   bio?: string;
+  /** null = no rate (clears it on update). Send rateCurrency with a price or cost. */
+  dailyPrice?: string | null;
+  dailyCost?: string | null;
+  rateCurrency?: string | null;
   status?: "active" | "inactive";
 }
 
@@ -38,6 +48,9 @@ export interface UpdateGuideInput {
   experienceYears?: number;
   specialization?: string;
   bio?: string;
+  dailyPrice?: string | null;
+  dailyCost?: string | null;
+  rateCurrency?: string | null;
   status?: "active" | "inactive";
 }
 

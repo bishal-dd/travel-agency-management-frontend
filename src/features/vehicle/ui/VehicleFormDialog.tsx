@@ -26,8 +26,21 @@ type FormState = {
   vehicleType: string;
   seatingCapacity: number;
   driverId: string; // "" = unassigned
+  /** Default rate per day; "" = not set. */
+  dailyPrice: string;
+  dailyCost: string;
+  rateCurrency: string;
   status: Status;
 };
+
+/** BTN first: vehicle hire is usually paid in ngultrum. */
+const RATE_CURRENCIES = ["BTN", "USD", "INR", "EUR"];
+
+const isMoney = (v: string) =>
+  /^\d{1,8}(\.\d{1,2})?$/.test(v.trim().replace(/,/g, ""));
+/** "8500.00" → "8500", null → "" */
+const moneyText = (v: string | null | undefined) =>
+  v == null ? "" : String(Number(v));
 
 const empty: FormState = {
   name: "",
@@ -35,6 +48,9 @@ const empty: FormState = {
   vehicleType: "",
   seatingCapacity: 4,
   driverId: "",
+  dailyPrice: "",
+  dailyCost: "",
+  rateCurrency: "BTN",
   status: "active",
 };
 
@@ -48,16 +64,26 @@ function validate(f: FormState): Errors {
   if (!f.vehicleType.trim()) e.vehicleType = "Vehicle type is required.";
   if (!Number.isInteger(f.seatingCapacity) || f.seatingCapacity < 1)
     e.seatingCapacity = "At least 1 seat.";
+  if ((f.dailyPrice ?? "").trim() && !isMoney(f.dailyPrice))
+    e.dailyPrice = "Enter an amount like 8500 or 45.50.";
+  if ((f.dailyCost ?? "").trim() && !isMoney(f.dailyCost))
+    e.dailyCost = "Enter an amount like 5000 or 45.50.";
   return e;
 }
 
 function toInput(f: FormState): CreateVehicleInput {
+  const price = (f.dailyPrice ?? "").trim().replace(/,/g, "");
+  const cost = (f.dailyCost ?? "").trim().replace(/,/g, "");
   return {
     name: f.name.trim(),
     registrationNumber: f.registrationNumber.trim().toUpperCase(),
     vehicleType: f.vehicleType.trim(),
     seatingCapacity: f.seatingCapacity,
     driverId: f.driverId || null, // null unassigns the driver
+    // Empty = no rate (null clears an existing one on edit).
+    dailyPrice: price || null,
+    dailyCost: cost || null,
+    rateCurrency: price || cost ? f.rateCurrency || "BTN" : null,
     status: f.status,
   };
 }
@@ -98,6 +124,9 @@ export function VehicleFormDialog({
             vehicleType: vehicle.vehicleType,
             seatingCapacity: vehicle.seatingCapacity,
             driverId: vehicle.driverId ?? "",
+            dailyPrice: moneyText(vehicle.dailyPrice),
+            dailyCost: moneyText(vehicle.dailyCost),
+            rateCurrency: vehicle.rateCurrency ?? "BTN",
             status: vehicle.status,
           }
         : empty,
@@ -109,7 +138,8 @@ export function VehicleFormDialog({
   }, [open, vehicle]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((f) => ({ ...f, [key]: value }));
+    // Merge over `empty` so every field always exists (e.g. after a hot reload).
+    setForm((f) => ({ ...empty, ...f, [key]: value }));
     if (errors[key]) setErrors((x) => ({ ...x, [key]: undefined }));
   }
 
@@ -330,6 +360,79 @@ export function VehicleFormDialog({
               />
             </div>
           </Field>
+
+          <div className="space-y-3 border-t border-line pt-5 sm:col-span-2">
+            <div>
+              <p className="text-sm font-semibold text-ink">Rate per day</p>
+              <p className="text-xs text-ink-soft">
+                The price is what the customer pays for the vehicle{" "}
+                <strong>with its driver</strong>. The cost is only the vehicle
+                (hire, fuel, running costs); the driver&apos;s daily cost is set
+                on the driver. Optional, and agents can still set a special
+                price.
+              </p>
+            </div>
+            <div className="grid grid-cols-[6.5rem_1fr_1fr] gap-3">
+              <Field label="Currency" htmlFor="v-rate-currency">
+                <div className="relative">
+                  <select
+                    id="v-rate-currency"
+                    value={form.rateCurrency || "BTN"}
+                    onChange={(e) => setField("rateCurrency", e.target.value)}
+                    className={`${inputCls} appearance-none pr-8`}
+                  >
+                    {[
+                      ...new Set([
+                        form.rateCurrency || "BTN",
+                        ...RATE_CURRENCIES,
+                      ]),
+                    ].map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={14}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-soft"
+                  />
+                </div>
+              </Field>
+              <Field
+                label="Price"
+                htmlFor="v-rate-price"
+                error={errors.dailyPrice}
+                hint="Customer pays, with driver"
+              >
+                <input
+                  id="v-rate-price"
+                  inputMode="decimal"
+                  value={form.dailyPrice ?? ""}
+                  onChange={(e) => setField("dailyPrice", e.target.value)}
+                  aria-invalid={!!errors.dailyPrice}
+                  placeholder="Not set"
+                  className={`${inputCls} text-right font-semibold tabular-nums`}
+                />
+              </Field>
+              <Field
+                label="Cost"
+                htmlFor="v-rate-cost"
+                error={errors.dailyCost}
+                hint="You pay, vehicle only"
+              >
+                <input
+                  id="v-rate-cost"
+                  inputMode="decimal"
+                  value={form.dailyCost ?? ""}
+                  onChange={(e) => setField("dailyCost", e.target.value)}
+                  aria-invalid={!!errors.dailyCost}
+                  placeholder="Not set"
+                  className={`${inputCls} text-right tabular-nums`}
+                />
+              </Field>
+            </div>
+          </div>
         </div>
 
         <ServerError error={error} />

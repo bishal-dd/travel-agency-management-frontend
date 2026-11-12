@@ -18,6 +18,53 @@ import { StatusBadge } from "../../hotel/ui/StatusBadge";
 
 type Filter = "all" | "active" | "inactive";
 
+/** "Nu. 10,200" / "$120"; falls back to "10200 XYZ" for unknown codes. */
+function formatMoney(amount: string, currency: string) {
+  const n = Number(amount);
+  try {
+    return new Intl.NumberFormat("en", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: n % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(n);
+  } catch {
+    return `${n.toLocaleString("en")} ${currency}`;
+  }
+}
+
+/** Price per night, with the cost beside it; a quiet note when no rate is set. */
+function RoomRate({ room }: { room: Room }) {
+  const currency = room.rateCurrency ?? "BTN";
+  if (!room.ratePrice && !room.rateCost) {
+    return (
+      <p className="mt-3 text-xs text-ink-soft">
+        No rate set: priced by hand on bookings
+      </p>
+    );
+  }
+  return (
+    <p className="mt-3 text-sm">
+      {room.ratePrice ? (
+        <>
+          <span className="font-semibold tabular-nums text-ink">
+            {formatMoney(room.ratePrice, currency)}
+          </span>
+          <span className="text-ink-soft"> / night</span>
+        </>
+      ) : (
+        <span className="text-ink-soft">No price</span>
+      )}
+      {room.rateCost && (
+        <span className="text-xs tabular-nums text-ink-soft">
+          {" "}
+          · cost {formatMoney(room.rateCost, currency)}
+        </span>
+      )}
+    </p>
+  );
+}
+
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-xl bg-paper px-4 py-3">
@@ -57,6 +104,8 @@ function RoomCard({
           {room.description}
         </p>
       )}
+
+      <RoomRate room={room} />
 
       <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4 text-sm">
         <div>

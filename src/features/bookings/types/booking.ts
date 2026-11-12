@@ -62,8 +62,20 @@ export interface BookingDay {
   overnightLocation: string | null;
   suggestedHotelId: string | null;
   suggestedHotel: { id: string; name: string; city: string } | null;
+  /** What's used on this day (hotel, vehicle, guide, services, other), priced. */
+  lines: BookingItem[];
+  totals: DayTotals;
   createdAt: string;
   updatedAt: string;
+}
+
+/** One day's price / cost / profit, in the booking currency. */
+export interface DayTotals {
+  price: string;
+  cost: string;
+  profit: string;
+  itemCount: number;
+  itemsWithoutCost: number;
 }
 
 /** GET /bookings/:id */
@@ -94,8 +106,14 @@ export interface BookingDetail {
   allowedStatuses: BookingStatus[];
   travellers: BookingTraveller[];
   days: BookingDay[];
-  items: BookingItem[];
-  totals: BookingTotals;
+  /** Sent by the stage 2 backend (booking items); missing on older backends. */
+  items?: BookingItem[];
+  totals?: BookingTotals;
+  /** Sent by the fees backend; missing on older backends. */
+  fees?: BookingFees;
+  /** null when the agency isn't GST-registered. */
+  gst?: { rate: string; inclusive: boolean; amount: string } | null;
+  summary?: BookingSummary;
 }
 
 // ---------- Items & pricing ----------
@@ -119,6 +137,8 @@ export interface BookingItem {
   bookingId: string;
   organizationId: string;
   type: BookingItemType;
+  /** The day it belongs to (1 = Day 1); null for an extra not tied to a day. */
+  dayNumber: number | null;
   startDate: string;
   endDate: string;
   hotelId: string | null;
@@ -132,6 +152,12 @@ export interface BookingItem {
   quantity: number;
   unitPrice: string;
   unitCost: string | null;
+  /** "rate" = priced from the room / service rate; "manual" = typed. */
+  priceSource?: "rate" | "manual";
+  sourceCurrency?: string | null;
+  sourceUnitPrice?: string | null;
+  sourceUnitCost?: string | null;
+  fxRate?: string | null;
   /** Nights (hotel), days (vehicle / guide) or 1. */
   units: number;
   per: "night" | "day" | "unit";
@@ -156,7 +182,9 @@ export interface BookingTotals {
 
 type ItemMoney = {
   quantity?: number;
-  unitPrice: string | number;
+  /** Leave out to price from the rate (room / service), converted by the server. */
+  unitPrice?: string | number;
+  /** Leave out to use the rate's cost; null = no cost. */
   unitCost?: string | number | null;
   /** Leave out to use the linked record's name. */
   description?: string;
@@ -208,6 +236,45 @@ export interface LastPriceResponse {
   data: LastPrice | null;
 }
 
+/** GET /booking-items/default-price — what an item would cost from its rate. */
+export interface DefaultPriceParams {
+  bookingId: string;
+  hotelRoomId?: string;
+  serviceId?: string;
+  vehicleId?: string;
+  driverId?: string;
+  guideId?: string;
+}
+
+export interface DefaultPrice {
+  /** In the booking's currency; null if the rate has no price or a rate is missing. */
+  unitPrice: string | null;
+  unitCost: string | null;
+  currency: string;
+  source: {
+    label: string; // e.g. "the Deluxe rate", "Tashi's rate"
+    currency: string;
+    unitPrice: string | null;
+    unitCost: string | null;
+    /** 1 source currency = fxRate booking currency (null if missing). */
+    fxRate: string | null;
+  };
+  /** On vehicles: the driver's part of unitCost (already included in it). */
+  extraCost: {
+    label: string; // e.g. "Karma's daily cost"
+    currency: string;
+    amount: string; // in its own currency
+    converted: string; // in the booking currency
+  } | null;
+  /** Set when the agency has no exchange rate for this currency yet. */
+  missingExchangeRate: string | null;
+}
+
+export interface DefaultPriceResponse {
+  success: boolean;
+  data: DefaultPrice | null;
+}
+
 export interface HotelsFromDaysResponse extends BookingDetailResponse {
   added: number;
 }
@@ -231,7 +298,29 @@ export interface BookingDayInput {
   meals: Meal[];
   overnightLocation?: string | null;
   suggestedHotelId?: string | null;
+  lines: DayLineInput[];
 }
+
+/**
+ * One thing used on a day. Dates come from the day. Send `id` back to keep
+ * the saved price; leave out unitPrice to use the rate, send it for a special price.
+ */
+type LineBase = {
+  id?: string;
+  quantity: number;
+  unitPrice?: string;
+  notes?: string | null;
+};
+export type DayLineInput =
+  | (LineBase & { type: "hotel"; hotelId: string; hotelRoomId?: string | null })
+  | (LineBase & {
+      type: "vehicle";
+      vehicleId: string;
+      driverId?: string | null;
+    })
+  | (LineBase & { type: "guide"; guideId: string })
+  | (LineBase & { type: "service"; serviceId: string })
+  | (LineBase & { type: "other"; description: string; unitPrice: string });
 
 export interface CreateBookingInput {
   customerId: string;
@@ -287,4 +376,47 @@ export interface BookingDetailResponse {
   success: boolean;
   message?: string;
   data: BookingDetail;
+}
+
+// ---------- Government fees & GST ----------
+
+export interface BookingFeeLine {
+  kind: "sdf" | "visa";
+  travellerId: string | null;
+  /** "SDF · John · international rate" */
+  description: string;
+  /** Nights for SDF, 1 for visa. */
+  quantity: number;
+  /** Per night / per visa, in sourceCurrency. */
+  unitAmount: string;
+  sourceCurrency: string;
+  /** In the booking currency; null if an exchange rate is missing. */
+  amount: string | null;
+  fxRate: string | null;
+}
+
+export interface BookingFees {
+  /** Locked at confirmation (true) or following today's rules (false). */
+  frozen: boolean;
+  frozenAt: string | null;
+  /** Travellers, dates or rules changed since the fees were locked. */
+  changedSinceFrozen: boolean;
+  nights: number;
+  lines: BookingFeeLine[];
+  sdf: string;
+  visa: string;
+  total: string;
+  warnings: string[];
+  missingExchangeRate: string | null;
+}
+
+/** What the customer pays, from the saved booking. */
+export interface BookingSummary {
+  tripPrice: string;
+  gst: string;
+  gstInclusive: boolean;
+  governmentFees: string;
+  total: string;
+  tripCost: string;
+  profit: string;
 }

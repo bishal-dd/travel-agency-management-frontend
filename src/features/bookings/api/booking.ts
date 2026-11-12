@@ -1,6 +1,8 @@
 import type {
   BookingDayInput,
   BookingItemInput,
+  DefaultPriceParams,
+  DefaultPriceResponse,
   HotelsFromDaysResponse,
   LastPriceParams,
   LastPriceResponse,
@@ -88,10 +90,25 @@ export const saveBookingTravellers = (
   });
 
 // PUT /bookings/:bookingId/days
-export const saveBookingDays = (bookingId: string, days: BookingDayInput[]) =>
-  send<BookingDetailResponse>("PUT", `/bookings/${bookingId}/days`, { days });
+/** Saves the days and what's used on each; refreshRates re-prices every line from today's rates. */
+export const saveBookingDays = (
+  bookingId: string,
+  days: BookingDayInput[],
+  refreshRates = false,
+) =>
+  send<BookingDetailResponse>("PUT", `/bookings/${bookingId}/days`, {
+    days,
+    refreshRates,
+  });
 
 // DELETE /bookings/:bookingId
+// POST /bookings/:bookingId/fees/recalculate — re-lock fees from today's travellers and rules
+export const recalculateBookingFees = (bookingId: string) =>
+  send<BookingDetailResponse>(
+    "POST",
+    `/bookings/${bookingId}/fees/recalculate`,
+  );
+
 export const deleteBooking = (bookingId: string) =>
   send<{ message: string }>("DELETE", `/bookings/${bookingId}`);
 
@@ -136,5 +153,17 @@ export function getLastPrice(
   return send<LastPriceResponse>(
     "GET",
     `/booking-items/last-price?${query.toString()}`,
+  );
+}
+
+// GET /booking-items/default-price
+export function getDefaultPrice(
+  params: DefaultPriceParams,
+): Promise<DefaultPriceResponse> {
+  const query = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) if (v) query.set(k, v);
+  return send<DefaultPriceResponse>(
+    "GET",
+    `/booking-items/default-price?${query.toString()}`,
   );
 }
