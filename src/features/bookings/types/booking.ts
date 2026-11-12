@@ -111,6 +111,8 @@ export interface BookingDetail {
   totals?: BookingTotals;
   /** Sent by the fees backend; missing on older backends. */
   fees?: BookingFees;
+  /** Paid, balance, status and what's due next (from the payments backend). */
+  payment?: import("../../payments/types/payment").PaymentSummary;
   /** null when the agency isn't GST-registered. */
   gst?: { rate: string; inclusive: boolean; amount: string } | null;
   summary?: BookingSummary;

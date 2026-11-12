@@ -63,6 +63,7 @@ import {
   tripLength,
 } from "./bookingUi";
 import { EditBookingDialog } from "./EditBookingDialog";
+
 import { PricingSection } from "./PricingSection";
 import { DayPlan, type PlanPickers } from "./DayPlan";
 import {
@@ -79,6 +80,7 @@ import { newDay, DraftDay } from "../../itineraries/utils/editorState";
 import { QuotesPanel } from "../../quotes/ui/QuotesPanel";
 import { useServices } from "../../service/hooks/useServices";
 import { useVehicles } from "../../vehicle/hooks/useVehicles";
+import { PaymentsPanel } from "../../payments/ui/PaymentsPanel";
 
 /** Records for the day pickers, loaded once. Keep ≤ your backend's max `limit`. */
 const PICKER_LIMIT = 100;
@@ -840,6 +842,7 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
         {/* Side column: quotes, customer, travellers */}
         <div className="space-y-6">
           <QuotesPanel booking={booking} unsavedChanges={dirty} />
+          <PaymentsPanel booking={booking} />
 
           <section
             aria-labelledby="customer-heading"

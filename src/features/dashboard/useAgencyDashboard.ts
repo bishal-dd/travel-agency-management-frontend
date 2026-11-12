@@ -1,26 +1,36 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/src/lib/auth-client";
 
-export type AgencyInvitation = {
-  id: string;
-  email: string;
-  role: string;
-  status: string;
-  expiresAt: Date | string;
-};
+/** The agency this browser used last, so people in several agencies return to it. */
+const LAST_AGENCY_KEY = "hmt:lastAgency";
 
-export type InviteRole = "admin" | "member";
+function readLastAgency() {
+  try {
+    return localStorage.getItem(LAST_AGENCY_KEY);
+  } catch {
+    return null; // private mode / storage blocked
+  }
+}
+
+function rememberAgency(organizationId: string) {
+  try {
+    localStorage.setItem(LAST_AGENCY_KEY, organizationId);
+  } catch {
+    // not critical
+  }
+}
 
 /**
- * All dashboard data and actions: Better Auth session, agency switching,
- * employee invitations, the pending invitation list and sign-out.
- * The logic is unchanged from the original dashboard page; only the UI moved.
+ * Dashboard shell data and actions: Better Auth session, agency switching and
+ * sign-out. Team members and invitations live in features/team.
  */
 export function useAgencyDashboard() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Authentication and organization data
   const {
@@ -38,19 +48,6 @@ export function useAgencyDashboard() {
   // Agency switching state
   const [isSwitching, setIsSwitching] = useState(false);
   const [switchError, setSwitchError] = useState("");
-
-  // Invitation form state
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [isInviting, setIsInviting] = useState(false);
-  const [inviteError, setInviteError] = useState("");
-  const [inviteSuccess, setInviteSuccess] = useState("");
-  const [inviteRole, setInviteRole] = useState<InviteRole>("member");
-
-  // Pending invitation list state
-  const [invitations, setInvitations] = useState<AgencyInvitation[]>([]);
-  const [isLoadingInvitations, setIsLoadingInvitations] = useState(false);
-  const [invitationError, setInvitationError] = useState("");
-  const [invitationRefreshKey, setInvitationRefreshKey] = useState(0);
 
   // Switch the active agency
   async function handleOrganizationChange(organizationId: string) {
@@ -71,7 +68,9 @@ export function useAgencyDashboard() {
         return;
       }
 
-      setInvitationRefreshKey((key) => key + 1);
+      rememberAgency(organizationId);
+      // Drop the previous agency's data and reload what's on screen.
+      await queryClient.resetQueries();
       router.refresh();
     } catch {
       setSwitchError("Unable to connect to the server.");
@@ -80,78 +79,39 @@ export function useAgencyDashboard() {
     }
   }
 
-  // Load invitations for the active agency
-  const loadInvitations = useCallback(async () => {
-    const organizationId = activeOrganization?.id;
-
-    if (!organizationId) {
-      setInvitations([]);
-      setInvitationError("");
-      setIsLoadingInvitations(false);
-      return;
-    }
-
-    setIsLoadingInvitations(true);
-    setInvitationError("");
-
-    try {
-      const { data, error } = await authClient.organization.listInvitations({
-        query: { organizationId },
-      });
-
-      if (error) {
-        setInvitationError(error.message ?? "Failed to load invitations.");
-        return;
-      }
-
-      setInvitations((data ?? []) as AgencyInvitation[]);
-    } catch {
-      setInvitationError("Unable to load invitations. Please try again.");
-    } finally {
-      setIsLoadingInvitations(false);
-    }
+  // Keep the last-used agency up to date (e.g. after accepting an invitation).
+  useEffect(() => {
+    if (activeOrganization?.id) rememberAgency(activeOrganization.id);
   }, [activeOrganization?.id]);
 
+  // Signed in but no active agency (older session, or the user was removed
+  // from it): pick the last-used one, else the first. Tried once per session.
+  const autoPicked = useRef<string | null>(null);
   useEffect(() => {
-    void loadInvitations();
-  }, [loadInvitations, invitationRefreshKey]);
-
-  // Invite an employee to the active agency
-  async function handleInvite(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const email = inviteEmail.trim();
-
-    if (!email || !activeOrganization || isInviting) {
+    if (
+      isSessionPending ||
+      isActiveOrganizationPending ||
+      areOrganizationsPending
+    )
       return;
-    }
+    if (!session || activeOrganization || isSwitching || !organizations?.length)
+      return;
+    if (autoPicked.current === session.session.id) return;
+    autoPicked.current = session.session.id;
 
-    setInviteError("");
-    setInviteSuccess("");
-    setIsInviting(true);
-
-    try {
-      const { error } = await authClient.organization.inviteMember({
-        email,
-        role: inviteRole,
-      });
-
-      if (error) {
-        setInviteError(error.message ?? "Failed to create invitation.");
-        return;
-      }
-
-      setInviteSuccess(`Invitation created for ${email}.`);
-      setInviteEmail("");
-
-      // Reload the pending invitation list
-      setInvitationRefreshKey((key) => key + 1);
-    } catch {
-      setInviteError("Unable to connect to the server.");
-    } finally {
-      setIsInviting(false);
-    }
-  }
+    const last = readLastAgency();
+    const target = organizations.find((o) => o.id === last) ?? organizations[0];
+    if (target) void handleOrganizationChange(target.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    session,
+    activeOrganization,
+    organizations,
+    isSwitching,
+    isSessionPending,
+    isActiveOrganizationPending,
+    areOrganizationsPending,
+  ]);
 
   // Sign out the current user
   async function handleSignOut() {
@@ -165,6 +125,8 @@ export function useAgencyDashboard() {
         return;
       }
 
+      // Don't leave this user's data in memory for whoever signs in next.
+      queryClient.clear();
       router.replace("/sign-in");
       router.refresh();
     } catch {
@@ -183,20 +145,6 @@ export function useAgencyDashboard() {
     isSwitching,
     switchError,
     handleOrganizationChange,
-    inviteEmail,
-    setInviteEmail,
-    inviteRole,
-    setInviteRole,
-    isInviting,
-    inviteError,
-    inviteSuccess,
-    handleInvite,
-    pendingInvitations: invitations.filter(
-      (invitation) => invitation.status === "pending",
-    ),
-    isLoadingInvitations,
-    invitationError,
-    retryInvitations: () => setInvitationRefreshKey((key) => key + 1),
     handleSignOut,
   };
 }
