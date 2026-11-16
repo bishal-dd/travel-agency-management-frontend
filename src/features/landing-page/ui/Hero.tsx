@@ -177,13 +177,6 @@ export function Hero() {
             spends the day selling trips instead of chasing spreadsheets.
           </p>
 
-          <div
-            className="animate-rise mt-7 sm:mt-8"
-            style={{ animationDelay: "240ms" }}
-          >
-            <WaitlistForm />
-          </div>
-
           <ul
             className="animate-rise mt-6 flex flex-col gap-2 text-sm text-ink-soft sm:mt-7 sm:flex-row sm:flex-wrap sm:gap-x-6"
             style={{ animationDelay: "340ms" }}
