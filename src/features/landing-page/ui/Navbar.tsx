@@ -20,8 +20,10 @@ export function Navbar() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
+
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -30,10 +32,12 @@ export function Navbar() {
     href: string,
   ) => {
     setOpen(false);
-    if (pathname !== "/") return; // other pages: normal navigation to home
+
+    if (pathname !== "/") return;
 
     const id = href.split("#")[1];
     const el = id ? document.getElementById(id) : null;
+
     if (!el) return;
 
     e.preventDefault();
@@ -53,24 +57,32 @@ export function Navbar() {
     >
       <Container className="relative flex h-16 items-center justify-between">
         <Logo />
+
         <nav
           aria-label="Main"
           className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex"
         >
-          {links.map((l) => (
+          {links.map((link) => (
             <Link
-              key={l.href}
-              href={l.href}
-              onClick={(e) => handleNavClick(e, l.href)}
+              key={link.href}
+              href={link.href}
+              onClick={(e) => handleNavClick(e, link.href)}
               className="text-sm font-medium text-ink-soft transition-colors hover:text-ink"
             >
-              {l.label}
+              {link.label}
             </Link>
           ))}
         </nav>
-        <div className="hidden items-center gap-2 lg:flex">
-          <Button href="/waitlist">Join the waitlist</Button>
+
+        {/* Desktop authentication actions */}
+        <div className="hidden items-center gap-3 lg:flex">
+          <Button href="/sign-in" variant="secondary">
+            Sign in
+          </Button>
+
+          <Button href="/sign-up">Sign up</Button>
         </div>
+
         <button
           type="button"
           className="-mr-2 grid size-10 place-items-center rounded-full text-ink lg:hidden"
@@ -83,6 +95,7 @@ export function Navbar() {
         </button>
       </Container>
 
+      {/* Mobile menu */}
       <div
         id="mobile-menu"
         className={`grid overflow-hidden transition-[grid-template-rows] duration-300 lg:hidden ${
@@ -91,19 +104,30 @@ export function Navbar() {
       >
         <div className="min-h-0" inert={!open}>
           <Container className="flex flex-col pb-6">
-            {links.map((l) => (
+            {links.map((link) => (
               <Link
-                key={l.href}
-                href={l.href}
-                onClick={(e) => handleNavClick(e, l.href)}
+                key={link.href}
+                href={link.href}
+                onClick={(e) => handleNavClick(e, link.href)}
                 className="border-b border-line py-3.5 text-base font-medium text-ink"
               >
-                {l.label}
+                {link.label}
               </Link>
             ))}
-            <div className="mt-5">
-              <Button href="/waitlist" size="lg" onClick={() => setOpen(false)}>
-                Join the waitlist
+
+            {/* Mobile authentication actions */}
+            <div className="mt-5 flex flex-col gap-3">
+              <Button
+                href="/sign-in"
+                variant="secondary"
+                size="lg"
+                onClick={() => setOpen(false)}
+              >
+                Sign in
+              </Button>
+
+              <Button href="/sign-up" size="lg" onClick={() => setOpen(false)}>
+                Sign up
               </Button>
             </div>
           </Container>

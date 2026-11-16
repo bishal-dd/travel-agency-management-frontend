@@ -16,16 +16,9 @@ export function CallToAction() {
               bookings, or explore with sample data.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button href="/waitlist" variant="onDark" size="lg">
-                Join the waitlist
+              <Button href="/sign-up" variant="onDark" size="lg">
+                Get started
               </Button>
-              {/* <Button
-                href="#"
-                size="lg"
-                className="bg-transparent text-white shadow-none ring-1 ring-white/25 ring-inset hover:bg-white/10"
-              >
-                Book a demo
-              </Button> */}
             </div>
           </div>
 

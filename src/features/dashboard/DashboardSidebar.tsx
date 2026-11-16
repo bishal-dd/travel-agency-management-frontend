@@ -14,9 +14,11 @@ import {
   IdCard,
   Landmark,
   LayoutDashboard,
+  ListChecks,
   LogOut,
   Package,
   Plane,
+  Route,
   Ticket,
   Users,
   UsersRound,
@@ -45,7 +47,7 @@ const nav: NavItem[] = [
   { label: "Vehicles", href: "/dashboard/vehicles", icon: Bus },
   { label: "Guides", href: "/dashboard/guides", icon: Compass },
   { label: "Services", href: "/dashboard/services", icon: Ticket },
-  { label: "Itineraries", href: "/dashboard/itineraries", icon: CalendarCheck },
+  { label: "Itineraries", href: "/dashboard/itineraries", icon: Route },
   { label: "Customers", href: "/dashboard/customers", icon: UsersRound },
   {
     label: "Bookings",
@@ -53,7 +55,7 @@ const nav: NavItem[] = [
     icon: CalendarCheck,
   },
   { label: "Packages", href: "/dashboard/packages", icon: Package, soon: true },
-  { label: "Trips", href: "/dashboard/trips", icon: Plane, soon: true },
+  { label: "Trips", href: "/dashboard/trips", icon: Plane },
   { label: "Payments", href: "/dashboard/payments", icon: CreditCard },
   {
     label: "Documents",
@@ -81,6 +83,11 @@ const settingsNav: NavItem[] = [
     label: "Payment terms",
     href: "/dashboard/settings/payments",
     icon: CreditCard,
+  },
+  {
+    label: "Trip checklist",
+    href: "/dashboard/settings/trips",
+    icon: ListChecks,
   },
 ];
 
