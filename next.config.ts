@@ -15,18 +15,6 @@ const nextConfig: NextConfig = {
       },
     },
   },
-
-  // Anything the browser sends to /backend/... is passed on to the Render backend.
-  // The browser only ever talks to www.helpmaketravel.com, so it keeps the login cookie.
-  async rewrites() {
-    return [
-      {
-        source: "/backend/:path*",
-        destination:
-          "https://travel-agency-management-backend.onrender.com/:path*",
-      },
-    ];
-  },
 };
 
 export default nextConfig;
