@@ -54,15 +54,8 @@ const nav: NavItem[] = [
     href: "/dashboard/bookings",
     icon: CalendarCheck,
   },
-  { label: "Packages", href: "/dashboard/packages", icon: Package, soon: true },
   { label: "Trips", href: "/dashboard/trips", icon: Plane },
   { label: "Payments", href: "/dashboard/payments", icon: CreditCard },
-  {
-    label: "Documents",
-    href: "/dashboard/documents",
-    icon: FileText,
-    soon: true,
-  },
   { label: "Team", href: "/dashboard/team", icon: Users },
 ];
 
