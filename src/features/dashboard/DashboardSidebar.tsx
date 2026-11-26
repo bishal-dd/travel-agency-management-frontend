@@ -22,6 +22,7 @@ import {
   Ticket,
   Users,
   UsersRound,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { useCan } from "@/src/lib/useCan";
@@ -127,6 +128,12 @@ const nav: NavItem[] = [
     href: "/dashboard/payments",
     icon: CreditCard,
     needs: { payment: ["read"] },
+  },
+  {
+    label: "Accounts",
+    href: "/dashboard/accounts",
+    icon: Wallet,
+    needs: { payment: ["read"], payable: ["read"] },
   },
   // {
   //   label: "Documents",
