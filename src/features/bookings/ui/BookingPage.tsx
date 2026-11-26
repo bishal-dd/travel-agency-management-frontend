@@ -66,6 +66,7 @@ import { EditBookingDialog } from "./EditBookingDialog";
 
 import { PricingSection } from "./PricingSection";
 import { DayPlan, type PlanPickers } from "./DayPlan";
+import { TripCrewBar } from "./TripCrewBar";
 import {
   type LinePrice,
   type LineTotals,
@@ -81,6 +82,7 @@ import { QuotesPanel } from "../../quotes/ui/QuotesPanel";
 import { useServices } from "../../service/hooks/useServices";
 import { useVehicles } from "../../vehicle/hooks/useVehicles";
 import { PaymentsPanel } from "../../payments/ui/PaymentsPanel";
+import { BookingFilesPanel } from "../../booking-files/ui/BookingFilesPanel";
 
 /** Records for the day pickers, loaded once. Keep ≤ your backend's max `limit`. */
 const PICKER_LIMIT = 100;
@@ -794,6 +796,9 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
             </div>
           ) : (
             <>
+              {!readOnly && (
+                <TripCrewBar days={days} pickers={pickers} onApply={setDays} />
+              )}
               <ol className="space-y-3">
                 {days.map((d, i) => (
                   <DayCard
@@ -839,7 +844,7 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
           )}
         </section>
 
-        {/* Side column: quotes, customer, travellers */}
+        {/* Side column: quotes, payments, customer, travellers, documents */}
         <div className="space-y-6">
           <QuotesPanel booking={booking} unsavedChanges={dirty} />
           <PaymentsPanel booking={booking} />
@@ -964,6 +969,12 @@ function BookingEditor({ booking }: { booking: BookingDetail }) {
               </p>
             )}
           </section>
+
+          {/* Passports, visas, tickets… (saved travellers only: new ones appear after saving). */}
+          <BookingFilesPanel
+            bookingId={booking.id}
+            travellers={booking.travellers}
+          />
         </div>
       </div>
 
