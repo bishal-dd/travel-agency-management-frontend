@@ -1,12 +1,22 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
+import {
+  getMyTripFileLink,
+  openInNewTab,
+} from "../../booking-files/api/bookingFiles";
+import {
+  categoryLabel,
+  formatBytes,
+  type BookingFileCategory,
+} from "../../booking-files/types/bookingFile";
 import Link from "next/link";
 import {
   ArrowLeft,
   BedDouble,
+  FileText,
   MapPin,
-  Phone,
+  MessageCircle,
   PlaneLanding,
   PlaneTakeoff,
   Star,
@@ -33,7 +43,20 @@ import {
 const pax = (p: MyTripDetail["pax"]) =>
   `${p.adults} adult${p.adults === 1 ? "" : "s"}${p.children ? ` · ${p.children} child${p.children === 1 ? "" : "ren"}` : ""}`;
 
-const tel = (phone: string) => `tel:${phone.replace(/\s/g, "")}`;
+/**
+ * WhatsApp chat link for a phone number. wa.me needs the full international
+ * number in digits only: "+44 7700 900123" → 447700900123. Bhutanese numbers
+ * saved without the country code (17123456, 77123456) get 975 in front.
+ */
+function whatsappLink(phone: string, text?: string) {
+  const raw = phone.trim();
+  let digits = raw.replace(/\D/g, "");
+  if (raw.startsWith("00")) digits = digits.slice(2);
+  else if (!raw.startsWith("+") && /^[17]\d{7}$/.test(digits))
+    digits = `975${digits}`;
+  if (digits.length < 8) return null;
+  return `https://wa.me/${digits}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
+}
 
 function Note({ note }: { note: MyTripNote }) {
   return (
@@ -191,7 +214,16 @@ function ageOn(dateOfBirth: string, on: string) {
   return y - by - (m < bm || (m === bm && d < bd) ? 1 : 0);
 }
 
-function Traveller({ t, tripStart }: { t: MyTraveller; tripStart: string }) {
+function Traveller({
+  t,
+  tripStart,
+  bookingId,
+}: {
+  t: MyTraveller;
+  tripStart: string;
+  bookingId: string;
+}) {
+  const [openError, setOpenError] = useState<string | null>(null);
   const age = t.dateOfBirth ? ageOn(t.dateOfBirth, tripStart) : null;
   const details: { label: string; value: string }[] = [];
   if (t.nationality)
@@ -234,6 +266,37 @@ function Traveller({ t, tripStart }: { t: MyTraveller; tripStart: string }) {
           )}
         </dl>
       )}
+      {t.files.length > 0 && (
+        <ul className="mt-2 space-y-1">
+          {t.files.map((f) => (
+            <li key={f.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpenError(null);
+                  openInNewTab(() => getMyTripFileLink(bookingId, f.id)).catch(
+                    (e: Error) => setOpenError(e.message),
+                  );
+                }}
+                className="flex w-full items-center gap-2 rounded-lg bg-mist/60 px-2.5 py-1.5 text-left text-xs hover:bg-mist"
+              >
+                <FileText
+                  size={13}
+                  aria-hidden="true"
+                  className="shrink-0 text-ink-soft"
+                />
+                <span className="min-w-0 flex-1 truncate font-medium text-ink">
+                  {categoryLabel(f.category as BookingFileCategory)}
+                </span>
+                <span className="shrink-0 text-ink-soft">
+                  {formatBytes(f.sizeBytes)} · View
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {openError && <p className="mt-1 text-xs text-red-700">{openError}</p>}
     </li>
   );
 }
@@ -306,6 +369,12 @@ export function MyTripDetailPage({ bookingId }: { bookingId: string }) {
     "takes off",
   );
   const notAllDays = trip.myDates.length < trip.totalDays;
+  const chat = trip.customer.phone
+    ? whatsappLink(
+        trip.customer.phone,
+        `Hello ${trip.customer.name.split(" ")[0]}, `,
+      )
+    : null;
 
   return (
     <div>
@@ -343,15 +412,25 @@ export function MyTripDetailPage({ bookingId }: { bookingId: string }) {
         <div className="order-1 space-y-4 lg:order-2">
           <Panel title="Booked by">
             <div className="flex items-center gap-3 px-5 py-4">
-              <p className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
-                {trip.customer.name}
-              </p>
-              {trip.customer.phone && (
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-ink">
+                  {trip.customer.name}
+                </p>
+                {trip.customer.phone && (
+                  <p className="text-xs tabular-nums text-ink-soft">
+                    {trip.customer.phone}
+                  </p>
+                )}
+              </div>
+              {chat && (
                 <a
-                  href={tel(trip.customer.phone)}
-                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-ink px-3.5 text-sm font-semibold text-white hover:bg-lagoon-deep"
+                  href={chat}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Chat with ${trip.customer.name} on WhatsApp`}
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 text-sm font-semibold text-white hover:bg-[#1ebe5b]"
                 >
-                  <Phone size={14} aria-hidden="true" /> Call
+                  <MessageCircle size={15} aria-hidden="true" /> WhatsApp
                 </a>
               )}
             </div>
@@ -365,7 +444,12 @@ export function MyTripDetailPage({ bookingId }: { bookingId: string }) {
             ) : (
               <ul className="divide-y divide-line">
                 {trip.travellers.map((t) => (
-                  <Traveller key={t.id} t={t} tripStart={trip.startDate} />
+                  <Traveller
+                    key={t.id}
+                    t={t}
+                    tripStart={trip.startDate}
+                    bookingId={trip.bookingId}
+                  />
                 ))}
               </ul>
             )}

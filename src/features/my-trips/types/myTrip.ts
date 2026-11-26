@@ -78,6 +78,14 @@ export interface MyTraveller {
   /** YYYY-MM-DD */
   dateOfBirth: string | null;
   isLead: boolean;
+  /** Passport scans, visas… uploaded for this traveller. */
+  files: {
+    id: string;
+    category: string;
+    fileName: string;
+    contentType: string;
+    sizeBytes: number;
+  }[];
 }
 
 export interface MyTripDetail extends Logistics {
