@@ -1,8 +1,14 @@
 /** Every role registered in auth/permissions.ts → organizationRoles. */
-export type Role = "owner" | "admin" | "staff" | "accountant" | "member";
+export type Role =
+  | "owner"
+  | "admin"
+  | "staff"
+  | "accountant"
+  | "guide"
+  | "member";
 
 /** Roles you can invite into or switch someone to. ("admin" is shown as Manager.) */
-export type AssignableRole = "staff" | "accountant" | "admin";
+export type AssignableRole = "staff" | "accountant" | "guide" | "admin";
 
 export interface TeamMember {
   id: string;

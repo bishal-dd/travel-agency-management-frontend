@@ -35,6 +35,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const closeMenu = useCallback(() => setMenuOpen(false), []);
   const isReady = !d.isSessionPending && !d.sessionError && !!d.session;
 
+  // No session and not signing out (e.g. the login expired): go to sign-in.
+  const signedOut = !d.isSessionPending && !d.session && !d.sessionError;
+  useEffect(() => {
+    if (signedOut && !d.isSigningOut) window.location.replace("/sign-in");
+  }, [signedOut, d.isSigningOut]);
+
   // While the drawer is open: lock page scroll, close on Escape.
   useEffect(() => {
     if (!menuOpen) return;
@@ -55,17 +61,23 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <CloseOnNavigate onNavigate={closeMenu} />
       </Suspense>
 
-      {d.isSessionPending ? (
+      {d.isSessionPending || d.isSigningOut || signedOut ? (
         <CenteredState>
           <div className="flex justify-center">
-            <Loading>Loading session...</Loading>
+            <Loading>
+              {d.isSigningOut
+                ? "Signing out…"
+                : signedOut
+                  ? "Taking you to sign in…"
+                  : "Loading session..."}
+            </Loading>
           </div>
         </CenteredState>
       ) : (
         !isReady && (
           <CenteredState>
             <p className="font-display text-2xl font-medium">
-              You are not signed in.
+              Couldn&apos;t check your sign-in.
             </p>
 
             <Link

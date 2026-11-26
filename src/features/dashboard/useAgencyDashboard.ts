@@ -48,6 +48,9 @@ export function useAgencyDashboard() {
   // Agency switching state
   const [isSwitching, setIsSwitching] = useState(false);
   const [switchError, setSwitchError] = useState("");
+  // Set while signing out, so the shell shows "Signing out…" instead of
+  // "You are not signed in" in the moment between sign-out and /sign-in.
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Switch the active agency
   async function handleOrganizationChange(organizationId: string) {
@@ -116,20 +119,25 @@ export function useAgencyDashboard() {
   // Sign out the current user
   async function handleSignOut() {
     setSwitchError("");
+    setIsSigningOut(true);
 
     try {
       const { error } = await authClient.signOut();
 
       if (error) {
+        setIsSigningOut(false);
         setSwitchError("Unable to sign out. Please try again.");
         return;
       }
 
       // Don't leave this user's data in memory for whoever signs in next.
       queryClient.clear();
-      router.replace("/sign-in");
-      router.refresh();
+      // A full page load, not router.replace: Better Auth keeps the old
+      // session and role in memory otherwise, so the next person to sign in
+      // briefly looks like the previous one (e.g. an owner sent to My trips).
+      window.location.replace("/sign-in");
     } catch {
+      setIsSigningOut(false);
       setSwitchError("Unable to sign out. Please try again.");
     }
   }
@@ -144,6 +152,7 @@ export function useAgencyDashboard() {
       isActiveOrganizationPending || areOrganizationsPending,
     isSwitching,
     switchError,
+    isSigningOut,
     handleOrganizationChange,
     handleSignOut,
   };

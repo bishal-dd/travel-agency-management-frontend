@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Compass, Mail, Phone, Plus } from "lucide-react";
+import { Compass, Mail, Phone, Plus, X } from "lucide-react";
 import { Pagination } from "../hotel/ui/Pagination";
 import { StatusBadge } from "../hotel/ui/StatusBadge";
 import { ConfirmDeleteDialog } from "../shared/components/ConfirmDeleteDialog";
@@ -17,6 +17,7 @@ import { useDeleteGuide } from "./hooks/useDeleteGuide";
 import { useGuides } from "./hooks/useGuides";
 import { Guide } from "./types/guide";
 import { GuideFormDialog } from "./ui/GuideFormDialog";
+import { GuideLoginStatus } from "./ui/GuideLoginStatus";
 
 const PAGE_SIZE = 20;
 
@@ -104,6 +105,8 @@ export function GuidesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Guide | null>(null);
   const [deleting, setDeleting] = useState<Guide | null>(null);
+  /** "Saved, but the invitation wasn't sent: …" */
+  const [inviteFailed, setInviteFailed] = useState("");
 
   useEffect(() => {
     if (deleting) remove.reset();
@@ -127,6 +130,26 @@ export function GuidesPage() {
         addLabel="Add guide"
         onAdd={openAdd}
       />
+
+      {inviteFailed && (
+        <div
+          role="alert"
+          className="mb-4 flex items-start justify-between gap-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800"
+        >
+          <p>
+            {inviteFailed} You can try again with &ldquo;Invite to HMT&rdquo;
+            under their email.
+          </p>
+          <button
+            type="button"
+            onClick={() => setInviteFailed("")}
+            aria-label="Dismiss"
+            className="shrink-0 rounded-full p-1 hover:bg-red-100"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-2xl border border-line bg-white">
         <ListToolbar
@@ -233,6 +256,9 @@ export function GuidesPage() {
                           />
                           <span className="truncate">{g.email}</span>
                         </a>
+                      ) : null}
+                      {g.email ? (
+                        <GuideLoginStatus email={g.email} />
                       ) : (
                         <span className="text-sm text-ink-soft">—</span>
                       )}
@@ -283,6 +309,7 @@ export function GuidesPage() {
                     <div className="min-w-0 space-y-0.5 text-sm text-ink-soft">
                       <p className="font-mono text-xs">CID {g.cid}</p>
                       {g.email && <p className="truncate">{g.email}</p>}
+                      <GuideLoginStatus email={g.email} />
                       <RateCell guide={g} />
                     </div>
                     <RowActions
@@ -310,6 +337,7 @@ export function GuidesPage() {
         open={formOpen}
         guide={editing}
         onClose={() => setFormOpen(false)}
+        onInviteFailed={setInviteFailed}
       />
 
       <ConfirmDeleteDialog

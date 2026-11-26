@@ -13,8 +13,11 @@ import {
 } from "../../shared/components/FormBits";
 import { useCreateGuide } from "../hooks/useCreateGuide";
 import { useUpdateGuide } from "../hooks/useUpdateGuide";
+import { useGuideLogins, useInviteGuide } from "../hooks/useGuideLogins";
 import type { CreateGuideInput, Guide } from "../types/guide";
 import { Modal } from "../../hotel/ui/Modal";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const COMMON_LANGUAGES = [
   "English",
@@ -108,7 +111,7 @@ function validate(f: FormState): Errors {
   if (!/^\d{11}$/.test(f.cid.trim())) e.cid = "CID must be 11 digits.";
   if (!/^\+?[\d\s-]{8,}$/.test(f.phone.trim()))
     e.phone = "Enter a valid phone number.";
-  if (f.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim()))
+  if (f.email.trim() && !EMAIL_RE.test(f.email.trim()))
     e.email = "Enter a valid email address.";
   if (f.languages.length === 0) e.languages = "Add at least one language.";
   if (f.experienceYears.trim()) {
@@ -264,13 +267,24 @@ type Props = {
   onClose: () => void;
   /** Pass a guide to edit; leave null to add. */
   guide?: Guide | null;
+  /** The guide was saved but the login invitation failed; show this message. */
+  onInviteFailed?: (message: string) => void;
 };
 
-export function GuideFormDialog({ open, onClose, guide }: Props) {
+export function GuideFormDialog({
+  open,
+  onClose,
+  guide,
+  onInviteFailed,
+}: Props) {
   const isEdit = !!guide;
   const create = useCreateGuide();
   const update = useUpdateGuide();
-  const isPending = isEdit ? update.isPending : create.isPending;
+  const logins = useGuideLogins();
+  const inviteGuide = useInviteGuide(logins.organizationId);
+  const [sendInvite, setSendInvite] = useState(true);
+  const isPending =
+    (isEdit ? update.isPending : create.isPending) || inviteGuide.isPending;
   const error = isEdit ? update.error : create.error;
 
   const [form, setForm] = useState<FormState>(empty);
@@ -280,6 +294,8 @@ export function GuideFormDialog({ open, onClose, guide }: Props) {
     if (!open) return;
     setForm(guide ? fromGuide(guide) : empty);
     setErrors({});
+    setSendInvite(true);
+    inviteGuide.reset();
     create.reset();
     update.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -296,6 +312,26 @@ export function GuideFormDialog({ open, onClose, guide }: Props) {
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setField(key, e.target.value as never);
 
+  // Offer a login only for an email that has none yet, and only to people who can invite.
+  const email = form.email.trim();
+  const login = EMAIL_RE.test(email) ? logins.lookup(email) : null;
+  const canOfferInvite = logins.canInvite && login?.state === "none";
+  const willInvite = canOfferInvite && sendInvite;
+
+  /** After saving: send the invitation if asked, then close. A failed invite doesn't undo the save. */
+  async function afterSave() {
+    if (willInvite) {
+      try {
+        await inviteGuide.send(email);
+      } catch (err) {
+        onInviteFailed?.(
+          `${form.name.trim() || "The guide"} was saved, but the invitation to ${email} wasn't sent: ${(err as Error).message}`,
+        );
+      }
+    }
+    onClose();
+  }
+
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const found = validate(form);
@@ -305,10 +341,10 @@ export function GuideFormDialog({ open, onClose, guide }: Props) {
     if (guide) {
       update.mutate(
         { guideId: guide.id, data: toInput(form) },
-        { onSuccess: onClose },
+        { onSuccess: () => void afterSave() },
       );
     } else {
-      create.mutate(toInput(form), { onSuccess: onClose });
+      create.mutate(toInput(form), { onSuccess: () => void afterSave() });
     }
   }
 
@@ -388,7 +424,39 @@ export function GuideFormDialog({ open, onClose, guide }: Props) {
               aria-invalid={!!errors.email}
               className={inputCls}
             />
+            {login?.state === "joined" && (
+              <p className="mt-1.5 text-xs text-emerald-700">
+                Has an HMT login (
+                {login.role === "guide" ? "Guide" : login.roleLabel}).
+              </p>
+            )}
+            {login?.state === "invited" && (
+              <p className="mt-1.5 text-xs text-ink-soft">
+                Already invited to HMT.
+              </p>
+            )}
           </Field>
+
+          {canOfferInvite && (
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-mist/60 px-4 py-3 sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={sendInvite}
+                onChange={(e) => setSendInvite(e.target.checked)}
+                className="mt-0.5 size-4 shrink-0 accent-lagoon-deep"
+              />
+              <span className="text-sm">
+                <span className="font-semibold text-ink">
+                  Invite them to HMT
+                </span>
+                <span className="block text-xs text-ink-soft">
+                  We&apos;ll email {email} a link to join as a Guide.
+                  They&apos;ll see only the trips you assign them, without
+                  prices.
+                </span>
+              </span>
+            </label>
+          )}
 
           <SectionLabel>Guiding</SectionLabel>
 
@@ -538,7 +606,15 @@ export function GuideFormDialog({ open, onClose, guide }: Props) {
         <FormFooter
           onCancel={onClose}
           isPending={isPending}
-          submitLabel={isEdit ? "Save changes" : "Add guide"}
+          submitLabel={
+            isEdit
+              ? willInvite
+                ? "Save and invite"
+                : "Save changes"
+              : willInvite
+                ? "Add and invite"
+                : "Add guide"
+          }
         />
       </form>
     </Modal>
