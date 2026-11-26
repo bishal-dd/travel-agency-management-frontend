@@ -22,8 +22,11 @@ import {
   Ticket,
   Users,
   UsersRound,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
+import { useCan } from "@/src/lib/useCan";
+import type { PermissionInput } from "@/src/lib/permissions";
 import { AgencySwitcher } from "./AgencySwitcher";
 import type { AgencyDashboard } from "./useAgencyDashboard";
 
@@ -33,54 +36,152 @@ type NavItem = {
   icon: LucideIcon;
   /** Not built yet: shown greyed out with a "Soon" tag instead of linking to a 404. */
   soon?: boolean;
+  /**
+   * What the page needs (same as its backend route). Hidden for roles without it.
+   * Leave out for pages everyone can open.
+   */
+  needs?: PermissionInput;
+  /** Hidden for roles that have this (e.g. "My trips" is for guides, not the office). */
+  hideIf?: PermissionInput;
 };
 
 // Same order as the marketing preview. Flip `soon` off as each page ships.
+// `needs` = the permission the page's main backend route checks.
 const nav: NavItem[] = [
-  { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  // Guides only: the trips they're assigned to. The office uses Trips instead.
+  {
+    label: "My trips",
+    href: "/dashboard/my-trips",
+    icon: Compass,
+    needs: { myTrips: ["read"] },
+    hideIf: { booking: ["read"] },
+  },
+  {
+    label: "Overview",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    needs: { booking: ["read"] },
+  },
   {
     label: "Hotels",
     href: "/dashboard/hotels",
     icon: Hotel,
+    needs: { hotel: ["read"] },
   },
-  { label: "Drivers", href: "/dashboard/drivers", icon: IdCard },
-  { label: "Vehicles", href: "/dashboard/vehicles", icon: Bus },
-  { label: "Guides", href: "/dashboard/guides", icon: Compass },
-  { label: "Services", href: "/dashboard/services", icon: Ticket },
-  { label: "Itineraries", href: "/dashboard/itineraries", icon: Route },
-  { label: "Customers", href: "/dashboard/customers", icon: UsersRound },
+  {
+    label: "Drivers",
+    href: "/dashboard/drivers",
+    icon: IdCard,
+    needs: { driver: ["read"] },
+  },
+  {
+    label: "Vehicles",
+    href: "/dashboard/vehicles",
+    icon: Bus,
+    needs: { vehicle: ["read"] },
+  },
+  {
+    label: "Guides",
+    href: "/dashboard/guides",
+    icon: Compass,
+    needs: { guide: ["read"] },
+  },
+  {
+    label: "Services",
+    href: "/dashboard/services",
+    icon: Ticket,
+    needs: { service: ["read"] },
+  },
+  {
+    label: "Itineraries",
+    href: "/dashboard/itineraries",
+    icon: Route,
+    needs: { itinerary: ["read"] },
+  },
+  {
+    label: "Customers",
+    href: "/dashboard/customers",
+    icon: UsersRound,
+    needs: { customer: ["read"] },
+  },
   {
     label: "Bookings",
     href: "/dashboard/bookings",
     icon: CalendarCheck,
+    needs: { booking: ["read"] },
   },
-  { label: "Trips", href: "/dashboard/trips", icon: Plane },
-  { label: "Payments", href: "/dashboard/payments", icon: CreditCard },
-  { label: "Team", href: "/dashboard/team", icon: Users },
+  // {
+  //   label: "Packages",
+  //   href: "/dashboard/packages",
+  //   icon: Package,
+  //   soon: true,
+  //   needs: { itinerary: ["read"] },
+  // },
+  {
+    label: "Trips",
+    href: "/dashboard/trips",
+    icon: Plane,
+    needs: { operation: ["read"] },
+  },
+  {
+    label: "Payments",
+    href: "/dashboard/payments",
+    icon: CreditCard,
+    needs: { payment: ["read"] },
+  },
+  {
+    label: "Accounts",
+    href: "/dashboard/accounts",
+    icon: Wallet,
+    needs: { payment: ["read"], payable: ["read"] },
+  },
+  // {
+  //   label: "Documents",
+  //   href: "/dashboard/documents",
+  //   icon: FileText,
+  //   soon: true,
+  //   needs: { booking: ["read"] },
+  // },
+  {
+    label: "Team",
+    href: "/dashboard/team",
+    icon: Users,
+    needs: { teamManagement: ["read"] },
+  },
 ];
 
 // Agency-wide settings, shown in their own group under the main nav.
+// Needs the permission that SAVES the setting: no point showing a form you can't save.
 const settingsNav: NavItem[] = [
   {
     label: "Taxes & fees",
     href: "/dashboard/settings/pricing",
     icon: Landmark,
+    needs: { rate: ["update"] },
   },
   {
     label: "Exchange rates",
     href: "/dashboard/settings/exchange-rates",
     icon: ArrowLeftRight,
+    needs: { rate: ["update"] },
   },
-  { label: "Quotes", href: "/dashboard/settings/quotes", icon: FileText },
+  {
+    label: "Quotes",
+    href: "/dashboard/settings/quotes",
+    icon: FileText,
+    needs: { agency: ["update"] },
+  },
   {
     label: "Payment terms",
     href: "/dashboard/settings/payments",
     icon: CreditCard,
+    needs: { agency: ["update"] },
   },
   {
     label: "Trip checklist",
     href: "/dashboard/settings/trips",
     icon: ListChecks,
+    needs: { operation: ["update"] },
   },
 ];
 
@@ -103,6 +204,18 @@ function NavItems({
   return (
     <ul className="space-y-0.5">
       {items.map((item) => {
+        if (item.href === LOADING) {
+          return (
+            <li
+              key={item.label}
+              aria-hidden="true"
+              className={`${itemBase} pointer-events-none`}
+            >
+              <span className="size-4 rounded bg-mist" />
+              <span className="h-3 w-24 rounded bg-mist" />
+            </li>
+          );
+        }
         if (item.soon) {
           return (
             <li
@@ -141,41 +254,43 @@ function NavItems({
   );
 }
 
-/** Main nav, then the Settings group (only for people who can manage settings). */
-function NavList({
-  pathname,
-  showSettings,
-}: {
-  pathname: string | null;
-  showSettings: boolean;
-}) {
+const LOADING = "#loading";
+/** Grey placeholder rows while the role loads, so forbidden links never flash up. */
+const placeholders = (n: number): NavItem[] =>
+  Array.from({ length: n }, (_, i) => ({
+    label: `loading-${i}`,
+    href: LOADING,
+    icon: LayoutDashboard,
+  }));
+
+/** Main nav, then the Settings group: each filtered by what the user's role allows. */
+function NavList({ pathname }: { pathname: string | null }) {
+  const { can, ready } = useCan();
+
+  const shown = (i: NavItem) => can(i.needs) && !(i.hideIf && can(i.hideIf));
+  const main = ready ? nav.filter(shown) : placeholders(7);
+  const settings = ready ? settingsNav.filter(shown) : [];
+
   return (
     <>
-      <NavItems items={nav} pathname={pathname} />
-      {showSettings && (
+      <NavItems items={main} pathname={pathname} />
+      {settings.length > 0 && (
         <div className="mt-6">
           <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wide text-ink-soft/80">
             Settings
           </p>
-          <NavItems items={settingsNav} pathname={pathname} />
+          <NavItems items={settings} pathname={pathname} />
         </div>
       )}
     </>
   );
 }
 
-function ActiveNavList({ showSettings }: { showSettings: boolean }) {
-  return <NavList pathname={usePathname()} showSettings={showSettings} />;
+function ActiveNavList() {
+  return <NavList pathname={usePathname()} />;
 }
 
-export function DashboardSidebar({
-  d,
-  showSettings = true,
-}: {
-  d: AgencyDashboard;
-  /** Pass false for staff and accountants (their settings requests get a 403 anyway). */
-  showSettings?: boolean;
-}) {
+export function DashboardSidebar({ d }: { d: AgencyDashboard }) {
   const user = d.session?.user;
   const initial = (user?.name || user?.email || "U").charAt(0).toUpperCase();
 
@@ -187,10 +302,8 @@ export function DashboardSidebar({
 
       <nav aria-label="Dashboard" className="-mx-2 flex-1 overflow-y-auto px-2">
         {/* usePathname() must sit inside <Suspense> on dynamic routes */}
-        <Suspense
-          fallback={<NavList pathname={null} showSettings={showSettings} />}
-        >
-          <ActiveNavList showSettings={showSettings} />
+        <Suspense fallback={<NavList pathname={null} />}>
+          <ActiveNavList />
         </Suspense>
       </nav>
 

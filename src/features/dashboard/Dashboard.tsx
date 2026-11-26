@@ -1,15 +1,35 @@
 "use client";
 
-import { ErrorText } from "./parts";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ErrorText, Loading } from "./parts";
 import { useDashboardContext } from "./DashboardContext";
 import { OverviewSections } from "../overview/OverviewPage";
+import { useCan } from "@/src/lib/useCan";
+
+/** Guides have no agency overview: their home is "My trips". */
+function useIsGuideOnly() {
+  const { can, ready } = useCan();
+  return {
+    ready,
+    guideOnly:
+      ready && can({ myTrips: ["read"] }) && !can({ booking: ["read"] }),
+  };
+}
 
 /** Agency overview: greeting, then the day at a glance. */
 export function Dashboard() {
   const d = useDashboardContext();
+  const router = useRouter();
+  const { ready, guideOnly } = useIsGuideOnly();
   const user = d.session?.user;
 
+  useEffect(() => {
+    if (guideOnly) router.replace("/dashboard/my-trips");
+  }, [guideOnly, router]);
+
   if (!user) return null;
+  if (!ready || guideOnly) return <Loading>Loading…</Loading>;
 
   return (
     <section>

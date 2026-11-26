@@ -234,7 +234,7 @@ function InvitationRow({
 // ---------- roles guide ----------
 
 function RolesGuide() {
-  const roles = ["owner", "admin", "staff", "accountant"] as const;
+  const roles = ["owner", "admin", "staff", "accountant", "guide"] as const;
   return (
     <section
       aria-labelledby="roles-heading"

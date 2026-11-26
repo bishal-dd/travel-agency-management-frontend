@@ -35,6 +35,9 @@ export const statement = {
   report: ["read"],
 
   subscription: ["read", "manage"],
+
+  /** The trips a guide is assigned to (read-only, no prices). */
+  myTrips: ["read"],
 } as const;
 
 /**
@@ -174,10 +177,22 @@ export const accountant = ac.newRole({
 });
 
 /**
+ * Guide:
+ * Sees only the trips they're assigned to (matched by the email on their
+ * guide profile): day plan, hotels, guests and crew. No prices, nothing else.
+ */
+export const guide = ac.newRole({
+  ...memberAc.statements,
+
+  myTrips: ["read"],
+});
+
+/**
  * Organization roles registered with Better Auth.
  *
  * owner: Owner
  * admin: Manager
+ * guide: Guide
  * member: Staff (legacy compatibility)
  */
 export const organizationRoles = {
@@ -185,5 +200,6 @@ export const organizationRoles = {
   admin: manager,
   staff,
   accountant,
+  guide,
   member: staff,
 } as const;

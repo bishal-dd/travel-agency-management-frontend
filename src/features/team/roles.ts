@@ -5,6 +5,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   admin: "Manager",
   staff: "Staff",
   accountant: "Accountant",
+  guide: "Guide",
   member: "Staff", // legacy name for staff
 };
 
@@ -19,6 +20,8 @@ export const ROLE_DESCRIPTION: Record<Role, string> = {
   staff:
     "Customers, quotes, bookings and travellers. Hotels, guides and vehicles are read-only.",
   accountant: "Payments, invoices and reports. Bookings are read-only.",
+  guide:
+    "Only the trips they're assigned to: day plan, hotels, guests and crew. No prices. Invite them with the email on their guide profile.",
   member:
     "Customers, quotes, bookings and travellers. Hotels, guides and vehicles are read-only.",
 };
@@ -26,6 +29,7 @@ export const ROLE_DESCRIPTION: Record<Role, string> = {
 export const ASSIGNABLE_ROLES: AssignableRole[] = [
   "staff",
   "accountant",
+  "guide",
   "admin",
 ];
 
@@ -36,12 +40,14 @@ export const ROLE_ORDER: string[] = [
   "accountant",
   "staff",
   "member",
+  "guide",
 ];
 
 export const ROLE_BADGE: Record<string, string> = {
   owner: "bg-ink text-white",
   admin: "bg-lagoon-tint text-lagoon-deep",
   accountant: "bg-marigold/20 text-ink",
+  guide: "bg-white text-ink ring-1 ring-inset ring-line",
   staff: "bg-mist text-ink-soft",
   member: "bg-mist text-ink-soft",
 };
