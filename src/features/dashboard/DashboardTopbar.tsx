@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { Menu, Search } from "lucide-react";
+import { Menu } from "lucide-react";
 import type { AgencyDashboard } from "./useAgencyDashboard";
 import { Logo } from "../landing-page/ui/ui";
+import { useCan } from "@/src/lib/useCan";
+import { HeaderSearch } from "../search/ui/HeaderSearch";
 
 type Props = {
   d: AgencyDashboard;
@@ -12,33 +12,11 @@ type Props = {
 };
 
 export function DashboardTopbar({ d, onOpenMenu }: Props) {
-  const router = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const { can, ready } = useCan();
   const user = d.session?.user;
   const initial = (user?.name || user?.email || "U").charAt(0).toUpperCase();
-
-  // Press "/" anywhere (outside a text field) to jump to search.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      const t = e.target as HTMLElement;
-      const typing =
-        t.tagName === "INPUT" ||
-        t.tagName === "TEXTAREA" ||
-        t.isContentEditable;
-      if (e.key === "/" && !typing) {
-        e.preventDefault();
-        inputRef.current?.focus();
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const q = new FormData(e.currentTarget).get("q")?.toString().trim();
-    if (q) router.push(`/dashboard/search?q=${encodeURIComponent(q)}`);
-  }
+  // Guides only see their own trips, so there's nothing for them to search.
+  const canSearch = ready && can({ booking: ["read"] });
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-line bg-white px-4 lg:gap-0 lg:px-0">
@@ -56,26 +34,7 @@ export function DashboardTopbar({ d, onOpenMenu }: Props) {
         <Logo />
       </div>
 
-      <form
-        role="search"
-        onSubmit={onSubmit}
-        className="min-w-0 flex-1 sm:max-w-sm lg:ml-12"
-      >
-        <label className="flex h-9 items-center gap-2 rounded-lg bg-mist px-3 text-sm text-ink-soft focus-within:ring-2 focus-within:ring-lagoon-deep/30">
-          <Search size={14} aria-hidden="true" className="shrink-0" />
-          <span className="sr-only">Search</span>
-          <input
-            ref={inputRef}
-            name="q"
-            type="search"
-            placeholder="Search customers, bookings, documents"
-            className="w-full min-w-0 bg-transparent text-ink outline-none placeholder:text-ink-soft"
-          />
-          <kbd className="hidden rounded border border-line bg-white px-1.5 text-[10px] font-semibold sm:inline">
-            /
-          </kbd>
-        </label>
-      </form>
+      {canSearch ? <HeaderSearch /> : <div className="min-w-0 flex-1" />}
 
       {/* On desktop the sidebar footer already shows the user, so the avatar is mobile-only. */}
       <span className="hidden lg:block lg:w-12" aria-hidden="true" />
