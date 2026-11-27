@@ -31,8 +31,7 @@ export const ALLOWED_FILE_TYPES = [
 ];
 export const FILE_ACCEPT =
   ".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif";
-export const MAX_FILE_BYTES = 10 * 1024 * 1024;
-
+export const MAX_FILE_BYTES = 20 * 1024 * 1024;
 export interface BookingFile {
   id: string;
   bookingId: string;
