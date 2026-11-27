@@ -11,8 +11,8 @@ const ROUTES = {
   /** Where new accounts go when they didn't arrive from an invitation or another page. */
   afterSignUp: "/onboarding",
   signIn: "/sign-in",
-  terms: "/terms",
-  privacy: "/privacy",
+  terms: "/terms-and-conditions",
+  privacy: "/privacy-policy",
 } as const;
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -244,19 +244,23 @@ export function SignUpForm() {
 
         <Checkbox name="terms" error={fieldErrors.terms}>
           I agree to the{" "}
-          <Link
+          <a
             href={ROUTES.terms}
+            target="_blank"
+            rel="noopener noreferrer"
             className="font-semibold text-ink underline underline-offset-2"
           >
-            Terms
-          </Link>{" "}
+            Terms<span className="sr-only"> (opens in a new tab)</span>
+          </a>{" "}
           and{" "}
-          <Link
+          <a
             href={ROUTES.privacy}
+            target="_blank"
+            rel="noopener noreferrer"
             className="font-semibold text-ink underline underline-offset-2"
           >
-            Privacy Policy
-          </Link>
+            Privacy Policy<span className="sr-only"> (opens in a new tab)</span>
+          </a>
           .
         </Checkbox>
 
