@@ -273,10 +273,13 @@ function TravellerRow({
   const set =
     (k: keyof DraftTraveller) => (e: React.ChangeEvent<HTMLInputElement>) =>
       onChange({ ...t, [k]: e.target.value });
-  const small = `${inputCls} h-9`;
+  const id = (field: string) => `traveller-${t.key}-${field}`;
+  // Same box as the rest of HMT, slightly bigger text for typing names and numbers.
+  const field = `${inputCls} text-[15px] disabled:bg-mist/50 disabled:text-ink-soft`;
+  const label = "mb-1 block text-xs font-medium text-ink-soft";
 
   return (
-    <li className="space-y-2 rounded-xl border border-line p-3">
+    <li className="rounded-xl border border-line p-3">
       <div className="flex items-center gap-2">
         <span className="grid size-7 shrink-0 place-items-center rounded-full bg-mist text-xs font-bold text-ink-soft">
           {index + 1}
@@ -287,7 +290,7 @@ function TravellerRow({
           onChange={set("name")}
           disabled={readOnly}
           placeholder="Full name as on passport"
-          className={`${small} font-semibold`}
+          className={`${field} min-w-0 flex-1 font-semibold`}
         />
         <button
           type="button"
@@ -319,31 +322,49 @@ function TravellerRow({
           </button>
         )}
       </div>
-      <div className="grid grid-cols-1 gap-2 pl-9 sm:grid-cols-3">
-        <input
-          aria-label="Nationality"
-          value={t.nationality}
-          onChange={set("nationality")}
-          disabled={readOnly}
-          placeholder="Nationality"
-          className={small}
-        />
-        <input
-          aria-label="Date of birth"
-          type="date"
-          value={t.dateOfBirth}
-          onChange={set("dateOfBirth")}
-          disabled={readOnly}
-          className={small}
-        />
-        <input
-          aria-label="Passport or CID"
-          value={t.passportOrCid}
-          onChange={set("passportOrCid")}
-          disabled={readOnly}
-          placeholder="Passport / CID"
-          className={`${small} font-mono`}
-        />
+
+      <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-3">
+        <div className="min-w-0">
+          <label htmlFor={id("nationality")} className={label}>
+            Nationality
+          </label>
+          <input
+            id={id("nationality")}
+            value={t.nationality}
+            onChange={set("nationality")}
+            disabled={readOnly}
+            placeholder="e.g. India"
+            autoComplete="off"
+            className={field}
+          />
+        </div>
+        <div className="min-w-0">
+          <label htmlFor={id("dob")} className={label}>
+            Date of birth
+          </label>
+          <input
+            id={id("dob")}
+            type="date"
+            value={t.dateOfBirth}
+            onChange={set("dateOfBirth")}
+            disabled={readOnly}
+            className={`${field} px-2 tabular-nums ${t.dateOfBirth ? "" : "text-ink-soft"}`}
+          />
+        </div>
+        <div className="col-span-2">
+          <label htmlFor={id("passport")} className={label}>
+            Passport / CID number
+          </label>
+          <input
+            id={id("passport")}
+            value={t.passportOrCid}
+            onChange={set("passportOrCid")}
+            disabled={readOnly}
+            placeholder="e.g. Z1234567"
+            autoComplete="off"
+            className={`${field} tracking-wide tabular-nums placeholder:tracking-normal`}
+          />
+        </div>
       </div>
     </li>
   );
