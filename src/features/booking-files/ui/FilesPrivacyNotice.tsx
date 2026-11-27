@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Clock,
-  EyeOff,
-  KeyRound,
-  Lock,
-  ShieldCheck,
-  Trash2,
-} from "lucide-react";
+import { EyeOff, KeyRound, ShieldCheck, Trash2 } from "lucide-react";
 import { Modal } from "../../hotel/ui/Modal";
 
 const SEEN_KEY = "hmt:filesPrivacyNoticeSeen";
@@ -24,19 +17,9 @@ export function privacyNoticeSeen() {
 
 const POINTS = [
   {
-    icon: Lock,
-    title: "Stored privately and encrypted",
-    body: "Files go into private storage and are encrypted there (AES-256). They're never public on the internet.",
-  },
-  {
     icon: KeyRound,
     title: "Only your team can open them",
     body: "In HMT, only people in your agency who can see this booking. Guides see only travellers' files on trips assigned to them.",
-  },
-  {
-    icon: Clock,
-    title: "Links expire after 5 minutes",
-    body: "Each time someone opens a file, HMT makes a fresh link. A forwarded link stops working.",
   },
   {
     icon: ShieldCheck,

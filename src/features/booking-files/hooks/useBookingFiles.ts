@@ -48,7 +48,7 @@ export interface UploadingFile {
 export function checkFile(file: File): string | null {
   if (!ALLOWED_FILE_TYPES.includes(fileType(file)))
     return `${file.name}: upload a PDF or a photo (JPG, PNG, WEBP or HEIC).`;
-  if (file.size > MAX_FILE_BYTES) return `${file.name} is over 10 MB.`;
+  if (file.size > MAX_FILE_BYTES) return `${file.name} is over 20 MB.`;
   if (file.size === 0) return `${file.name} is empty.`;
   return null;
 }

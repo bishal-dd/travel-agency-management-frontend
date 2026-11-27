@@ -352,7 +352,7 @@ export function BookingFilesPanel({
         </h2>
         <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-soft">
           <Lock size={12} aria-hidden="true" /> Private and encrypted. Only your
-          team can open them. PDF or photo, up to 10 MB.
+          team can open them. PDF or photo, up to 20 MB.
         </p>
       </div>
 
